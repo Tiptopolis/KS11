@@ -40,7 +40,7 @@ public class aSet<T> extends _Array<T> {
 		}
 	}
 
-	public void append(iCollection<T> C) {
+	public void appendAll(iCollection<T> C) {
 		if (C instanceof aList) {
 			for (int i = 0; i < C.size(); i++) {
 				T t = C.get(i);

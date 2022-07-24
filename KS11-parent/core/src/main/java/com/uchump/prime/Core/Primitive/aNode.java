@@ -13,65 +13,81 @@ import com.uchump.prime.Core.Primitive.A_I.iCollection;
 import com.uchump.prime.Core.Primitive.A_I.iGroup;
 import com.uchump.prime.Core.Primitive.A_I.iMap;
 import com.uchump.prime.Core.Primitive.A_I.iNode;
+import com.uchump.prime.Core.Primitive.A_I.iToken;
 import com.uchump.prime.Core.Primitive.Struct._Map.Entry;
-import com.uchump.prime.Core.Primitive.Struct.aDictionary;
+import com.uchump.prime.Core.Utils.StringUtils;
 import com.uchump.prime.Core.Primitive.Struct.aList;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 import com.uchump.prime.Core.Primitive.Struct.aMap;
-import com.uchump.prime.Core.Primitive.Struct.aSetMap;
+import com.uchump.prime.Core.Primitive.Struct._Map;
 import com.uchump.prime.Core.Primitive.Struct.aSet;
+import com.uchump.prime.Core.Primitive.Struct.bDictionary;
 
-public class aNode<T> implements iNode<T> {
+public class aNode<T> extends aToken<T> implements iNode<T> {
 
-	public static aNode<Void> Null = new aNode(Void.class);
+	public static aNode NULL;
+	static {
+		NULL = new aNode("null", Void.TYPE);
+	}
 
 	public String label;
-	public T value;
-	public Object type;
-	public Supplier<T> Get = () -> {
-		return this.get();
-	};
-	public Consumer<T> Set = (T t) ->{this.set(t);};
-	
-	public BiConsumer<String,Object> Put = (String s,Object o) ->{this.set(s, o);};
-
-	public aSetMap<String, aDictionary> data; // Data, Inner, Outter
 
 	// dictionary & links
-	protected aDictionary<aNode> links;
-	public aSetMap<String, Object> shared;
+	public aMap<String, bDictionary> data; // Data, Inner, Outter
+
+	public aMap<String, Object> shared;
+	public aMultiMap<_Map.Entry<String, Object>, Object> meta;
+	public aMap<_Map.Entry<String, Object>, iFunctor> fields;
+
+	protected bDictionary<aLink> links;
+
+	//////
+	public Supplier<Object> Get = () -> {
+		return this.get();
+	};
+	public Function<String, Object> GetA = (label) -> {
+		return this.get(label);
+	};
+	public Consumer<T> Set = (T t) -> {
+		this.set(t);
+	};
+	public BiConsumer<String, Object> Put = (String s, Object o) -> {
+		this.set(s, o);
+	};
 
 	public aNode() {
 		this.value = (T) Void.class;
-		this.shared = new aSetMap<String, Object>();
-		this.data = new aSetMap<String, aDictionary>();
+		this.shared = new aMap<String, Object>();
+		this.data = new aMap<String, bDictionary>();
+		this.type = value.getClass();
 	}
 
 	public aNode(T value) {
 		this.value = value;
-		this.shared = new aSetMap<String, Object>();
-		this.data = new aSetMap<String, aDictionary>();
+		this.shared = new aMap<String, Object>();
+		this.data = new aMap<String, bDictionary>();
+		this.type = value.getClass();
+	}
+
+	public aNode(String label, T value) {
+		this(value);
+		this.label = label;
 	}
 
 	@Override
-	public T get() {
-		return this.value;
-	}
-
-	public Object get(String name) {
-		return this.shared.get(name);
-	}
-
-	public aDictionary getData(String name) {
-		return this.data.get(name);
-	}
-
-	@Override
-	public void set(T to) {
-		this.value = to;
-	}
-
-	public void set(String k, Object v) {
-		this.shared.put(k, v);
+	public String type() {
+		// if (!(this.get() instanceof iToken))
+		if (instanceOf(aNode.class).test(this.value))
+			return ((aNode) this.value).toToken();
+		// return ((aNode)this.value).toNodeTag();
+		if (instanceOf(iToken.class).test(this.value))
+			return "<" + ((iToken) this.get()).type() + ">";
+		if (instanceOf(iCollection.class).test(this.value)) {
+			iCollection C = ((iCollection) this.get());
+			return "(" + C.getClass().getSimpleName() + "[" + C.size() + "]{<" + C.getComponentType().getSimpleName()
+					+ ">})";
+		} else
+			return "<" + this.value.getClass().getSimpleName() + ">";
 	}
 
 	@Override
@@ -85,6 +101,201 @@ public class aNode<T> implements iNode<T> {
 			return this.hashId();
 		else
 			return this.label;
+	}
+
+	@Override
+	public T get() {
+		return this.value;
+	}
+
+	public Object get(String name) {
+		return this.shared.get(name);
+	}
+
+	public bDictionary getData(String name) {
+		return this.data.get(name);
+	}
+
+	@Override
+	public void set(T to) {
+		this.value = to;
+	}
+
+	public void set(String k, Object v) {
+
+		if (!this.shared.containsKey(k)) {
+			_Map.Entry<String, Object> E = new _Map.Entry<String, Object>(k, v);
+			this.shared.put(E);
+
+		} else
+			this.shared.set(k, v);
+	}
+
+	public void dispose() {
+		this.label = null;
+		this.Get = null;
+		this.Set = null;
+		this.Put = null;
+		this.value = null;
+		for (Entry<Entry<Object, java.lang.String>, aLink> L : this.links)
+			L.getValue().dispose();
+		this.links.clear();
+		this.data.clear();
+		this.meta.clear();
+		this.shared.clear();
+	}
+
+	public boolean is(String what) {
+		for (Entry<String, Object> E : this.shared) {
+			if (StringUtils.isFormOf(E.getKey(), what)) {
+				if (instanceOf(Boolean.class).test(E.getValue()))
+					return (boolean) E.getValue();
+				if (instanceOf(aNode.class).test(E.getValue())) {
+					aNode N = (aNode) E.getValue();
+					if (instanceOf(Boolean.class).test(N.get()))
+						return (boolean) N.get();
+				}
+			}
+		}
+		return false;
+	}
+
+	public boolean has(String what) {
+
+		if (this.links != null && !this.links.isEmpty())
+			for (Object E : this.links) {
+
+				if (E.equals(what) || E.equals(what.toLowerCase()) || E.equals(what.toUpperCase()))
+					return true;
+
+				aMultiMap.Entry e = (aMultiMap.Entry) E;
+
+				boolean a = e.getKey().equals(what) || e.getKey().equals(what.toUpperCase())
+						|| e.getKey().equals(what.toLowerCase());
+				boolean b = e.getValue().equals(what) || e.getValue().equals(what.toUpperCase())
+						|| e.getValue().equals(what.toLowerCase());
+				if (a || b)
+					return true;
+			}
+
+		for (Entry<String, Object> E : this.shared) {
+			// if(E.getValue() == aNode.NULL || E.getValue() == aValue.EMPTY)
+			// return false;
+			if (StringUtils.isFormOf(E.getKey(), what))
+				return true;
+		}
+		for (Entry<String, bDictionary> E : this.data)
+			if (StringUtils.isFormOf(E.getKey(), what))
+				return true;
+
+		return false;
+
+	}
+
+	public boolean hasA(String what) {
+		if (this.links != null && !this.links.isEmpty())
+			for (Object E : this.links) {
+
+				// if (E.equals(what) || E.equals(what.toLowerCase()) ||
+				// E.equals(what.toUpperCase()))
+				// return true;
+				if (StringUtils.isFormOf("" + E, what))
+					return true;
+
+				aMultiMap.Entry e = (aMultiMap.Entry) E;
+
+				boolean a = e.getKey().equals(what) || e.getKey().equals(what.toUpperCase())
+						|| e.getKey().equals(what.toLowerCase());
+				boolean b = e.getValue().equals(what) || e.getValue().equals(what.toUpperCase())
+						|| e.getValue().equals(what.toLowerCase());
+				if (a || b)
+					return true;
+			}
+
+		boolean b = false;
+		for (Entry<String, Object> E : this.shared) {
+			if (StringUtils.isFormOf(E.getKey(), what))
+				if (E.getValue() instanceof aNode) {
+					aNode N = (aNode) E.getValue();
+					if (!N.equals(aNode.NULL) && N != aNode.NULL && !N.equals(aValue.EMPTY) && N != aValue.EMPTY)
+						b = true;
+					if (b)
+						return b;
+				}
+		}
+
+		for (Entry<String, bDictionary> E : this.data)
+			if (StringUtils.isFormOf(E.getKey(), what))
+				return true;
+
+		return false;
+	}
+
+	public boolean hasA(Class c) {
+		for (Entry E : this.data)
+			if (instanceOf(c).test(E.getValue()))
+				return true;
+
+		return false;
+	}
+
+	public boolean has(Class... c) {
+		for (Entry E : this.data)
+			if (instanceOf(c).test(E.getValue()))
+				return true;
+
+		return false;
+	}
+
+	public boolean has(Object context) {
+		if (this.links != null || !this.links.isEmpty())
+			for (Entry<Object, String> E : this.links.getKeys()) {
+				if (E.getKey() == context || E.getKey().equals(context))
+					return true;
+			}
+		return false;
+	}
+
+	public boolean has(Object context, String as) {
+
+		if (this.shared.contains(as, context))
+			return true;
+
+		if (this.links == null || this.links.isEmpty())
+			return false;
+
+		for (Entry<Object, String> E : this.links.getKeys()) {
+			if ((E.getKey() == context || E.getKey().equals(context))
+					&& (E.getValue().equals(as) || E.getValue().toLowerCase().equals(as.toLowerCase())))
+				return true;
+		}
+		return false;
+	}
+
+	public boolean has(Entry<Object, String> key) {
+
+		if (this.shared.contains(key.getValue(), key.getKey()))
+			return true;
+
+		if (this.links == null || this.links.isEmpty())
+			return false;
+
+		return this.links.containsKey(key);
+	}
+
+	public boolean has(aNode target) {
+
+		if (this.shared.containsValue(target))
+			return true;
+
+		if (this.links == null || this.links.isEmpty())
+			return false;
+
+		return this.links.containsValue(target);
+	}
+
+	private static void _LINKS_() {
+
 	}
 
 	// [source->target]
@@ -101,7 +312,7 @@ public class aNode<T> implements iNode<T> {
 	public aLink link(Object context, String as, aNode target, Number phase) {
 
 		if (this.links == null)
-			this.links = new aDictionary<aNode>();
+			this.links = new bDictionary<aLink>();
 
 		aLink L = null;
 		Entry<Object, String> E = null;
@@ -114,7 +325,8 @@ public class aNode<T> implements iNode<T> {
 
 		} else {
 			E = new Entry<Object, String>(context, as);
-			L = (aLink) this.links.get(E);
+			// L = (aLink) this.links.get(E);
+			L = (aLink) ((Object) this.links.get(E));
 			L.append(phase, target);
 		}
 		return L;
@@ -130,17 +342,17 @@ public class aNode<T> implements iNode<T> {
 
 	public aLink link(aLink link) {
 		if (this.links == null)
-			this.links = new aDictionary<aNode>();
+			this.links = new bDictionary<aLink>();
 
 		this.links.put(new Entry(this, link.label), link);
 		return link;
 	}
 
-	public aList<aMap.Entry> getLinks() {
+	public aList<aMultiMap.Entry> getLinks() {
 
-		aList<aMap.Entry> out = new aList<aMap.Entry>();
+		aList<aMultiMap.Entry> out = new aList<aMultiMap.Entry>();
 		for (Object o : this.links)
-			out.append((aMap.Entry) o);
+			out.append((aMultiMap.Entry) o);
 
 		return out;
 	}
@@ -152,7 +364,7 @@ public class aNode<T> implements iNode<T> {
 		if (this.links != null && !this.links.isEmpty())
 			for (Object E : this.links) {
 
-				aMap.Entry e = (aMap.Entry) E;
+				aMultiMap.Entry e = (aMultiMap.Entry) E;
 
 				boolean a = e.getKey().equals(as) || e.getKey().equals(as.toUpperCase())
 						|| e.getKey().equals(as.toLowerCase());
@@ -165,6 +377,25 @@ public class aNode<T> implements iNode<T> {
 			return null;
 
 		return res;
+	}
+
+	public boolean hasLink(String what) {
+		if (this.links != null && !this.links.isEmpty())
+			for (Object E : this.links) {
+
+				if (E.equals(what) || E.equals(what.toLowerCase()) || E.equals(what.toUpperCase()))
+					return true;
+
+				aMultiMap.Entry e = (aMultiMap.Entry) E;
+
+				boolean a = e.getKey().equals(what) || e.getKey().equals(what.toUpperCase())
+						|| e.getKey().equals(what.toLowerCase());
+				boolean b = e.getValue().equals(what) || e.getValue().equals(what.toUpperCase())
+						|| e.getValue().equals(what.toLowerCase());
+				if (a || b)
+					return true;
+			}
+		return false;
 	}
 
 	public void disconnect(aNode target) {
@@ -229,86 +460,30 @@ public class aNode<T> implements iNode<T> {
 
 	}
 
-	public boolean has(String as) {
-
-		if (this.links != null && !this.links.isEmpty())
-			for (Object E : this.links) {
-
-				if (E.equals(as) || E.equals(as.toLowerCase()) || E.equals(as.toUpperCase()))
-					return true;
-
-				aMap.Entry e = (aMap.Entry) E;
-
-				boolean a = e.getKey().equals(as) || e.getKey().equals(as.toUpperCase())
-						|| e.getKey().equals(as.toLowerCase());
-				boolean b = e.getValue().equals(as) || e.getValue().equals(as.toUpperCase())
-						|| e.getValue().equals(as.toLowerCase());
-				if (a || b)
-					return true;
-			}
-
-		if (this.shared.containsKey(as) || this.shared.containsKey(as.toLowerCase())
-				|| this.shared.containsKey(as.toUpperCase()))
-			return true;
-
-		return false;
-	}
-
-	public boolean has(Object context) {
-		if (this.links != null || !this.links.isEmpty())
-			for (Entry<Object, String> E : this.links.getKeys()) {
-				if (E.getKey() == context || E.getKey().equals(context))
-					return true;
-			}
-		return false;
-	}
-
-	public boolean has(Object context, String as) {
-
-		if (this.shared.contains(as, context))
-			return true;
-
-		if (this.links == null || this.links.isEmpty())
-			return false;
-
-		for (Entry<Object, String> E : this.links.getKeys()) {
-			if ((E.getKey() == context || E.getKey().equals(context))
-					&& (E.getValue().equals(as) || E.getValue().toLowerCase().equals(as.toLowerCase())))
-				return true;
-		}
-		return false;
-	}
-
-	public boolean has(Entry<Object, String> key) {
-
-		if (this.shared.contains(key.getValue(), key.getKey()))
-			return true;
-
-		if (this.links == null || this.links.isEmpty())
-			return false;
-
-		return this.links.containsKey(key);
-	}
-
-	public boolean has(aNode target) {
-
-		if (this.shared.containsValue(target))
-			return true;
-
-		if (this.links == null || this.links.isEmpty())
-			return false;
-
-		return this.links.containsValue(target);
-	}
-
 	public aLink getLink(Object context, String label) {
-		if (this.links == null)
-			this.links = new aDictionary<aNode>();
+		/*
+		 * if (this.links == null) this.links = new bDictionary<aLink>();
+		 * 
+		 * return (aLink) this.links.get(context, label);
+		 */
 
-		return (aLink) this.links.get(context, label);
+		if (this.links == null)
+			this.links = new bDictionary<aLink>();
+
+		Object L = this.links.get(context, label);
+
+		if (L != null) {
+			if (L instanceof aLink)
+				return (aLink) L;
+			else if (L instanceof iCollection && ((iCollection) L).size() == 1)
+				if (((iCollection) L).get(0) instanceof aLink)
+					return (aLink) ((iCollection) L).get(0);
+
+		}
+		return null;
 	}
 
-	public aMap<String, Object> search(String... terms) {
+	public aMultiMap<String, Object> search(String... terms) {
 		return iMap.search(this.shared, terms);
 	}
 
@@ -330,17 +505,42 @@ public class aNode<T> implements iNode<T> {
 		} else
 			return null;
 	}
-	
-	public iGroup toTrivial()
-	{
+
+	public iGroup toTrivial() {
 		return new aSet<aNode>(this);
 	}
 
 	public String toTag() {
 		String tag = "";
 
-		tag = this.get().getClass().getSimpleName();
-		return "<" + tag + ">";
+		if (this.get() instanceof Class)
+			tag = ((Class) this.get()).getSimpleName();
+		else
+			tag = this.get().getClass().getSimpleName();
+
+		tag = "<" + tag + ">";
+		return tag;
+	}
+
+	public String toToken() {
+		String tag = "";
+
+		if (instanceOf(iCollection.class).test(this.value)) {
+			iCollection C = ((iCollection) this.get());
+			String T = this.get().getClass().getSimpleName();
+			return "(" + C.getClass().getSimpleName() + "[" + C.size() + "]" + C + ")";
+		}
+
+		if (this.get() instanceof Class)
+			tag = ((Class) this.get()).getSimpleName();
+		else
+			tag = this.get().getClass().getSimpleName();
+		tag = "<" + tag + ">";
+
+		if (this.label != null)
+			tag = "[" + this.label + "] = " + tag;
+
+		return tag;
 	}
 
 	public String toNodeTag() {
@@ -355,17 +555,37 @@ public class aNode<T> implements iNode<T> {
 		String v = "{(" + value + "):(" + this.toTag() + c + ")}]";
 		return v;
 	}
+	
+	public String toPropTag()
+	{
+		String a = ""+this.label;
+		String b = "[("+this.value + "):<"+this.value.getClass().getSimpleName()+">]";
+		if(!a.equals("") && !a.equals("null") && !a.equals(" "))
+			return a+" = "+b;
+		else
+			return b;
+	}
+	
+	public String toPropIndexTag()
+	{
+		String a = ""+this.label;
+		String b = "[("+this.value + "):<"+this.value.getClass().getSimpleName()+">]";
+		if(!a.equals("") && !a.equals("null") && !a.equals(" "))
+			return a+" = "+b;
+		else
+			return " = "+b;
+	}
 
 	@Override
 	public String toString() {
-		String s = "";
-		String t = "";
-		if (this.type != null)
-			t = "" + this.type;
+		/*
+		 * String s = ""; String t = ""; if (this.type != null) t = "" + this.type;
+		 * 
+		 * s = this.label() + " = " + this.value + t;
+		 */
 
-		s = this.label() + " = " + this.value + t;
-
-		return s;
+		// return s;
+		return this.toToken();
 	}
 
 	public String toLog() {
@@ -377,6 +597,10 @@ public class aNode<T> implements iNode<T> {
 				aLink l = (aLink) e.getValue();
 				log += l.toLog() + "\n";
 			}
+		if (this.shared != null) {
+			log += "[SHARED]\n";
+			log += this.shared.toLog();
+		}
 		return log;
 	}
 

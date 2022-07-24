@@ -31,7 +31,7 @@ public class aLinkedList<T> implements iLinkedCollection<T> {
 			this.append((T) entries[i]);
 		}
 	}
-	
+
 	@Override
 	public Integer firstIndex() {
 		return 0;
@@ -204,6 +204,10 @@ public class aLinkedList<T> implements iLinkedCollection<T> {
 		return null;
 	}
 
+	public aNode getNode(int index) {
+		return (aNode) this.get(index);
+	}
+
 	public aNode<T> getFirst() {
 		return this.first;
 	}
@@ -363,6 +367,12 @@ public class aLinkedList<T> implements iLinkedCollection<T> {
 		return L;
 	}
 
+	@Override
+	public Integer getIndexType() {
+		
+		return 0;
+	}
+	
 	public aList<T> toList() {
 		aList<T> asList = new aList<T>();
 		for (T t : this) {
@@ -420,7 +430,7 @@ public class aLinkedList<T> implements iLinkedCollection<T> {
 		if (this.first == null || this.last == null || this.isEmpty())
 			return log;
 		for (T t : this) {
-			log += "[" + this.indexOf(t) + "]" + this.get(this.indexOf(t)) + "\n";
+			log += "[" + this.indexOf(t) + "]" + ((aNode)this.get(this.indexOf(t))).toPropIndexTag() + "\n";
 			// log += t + "\n";
 		}
 		return log;
@@ -571,8 +581,8 @@ public class aLinkedList<T> implements iLinkedCollection<T> {
 	}
 
 	@Override
-	public <N, X> aSetMap<N, X> toMap() {
-		
+	public <N, X> aMap<N, X> toMap() {
+
 		return null;
 	}
 

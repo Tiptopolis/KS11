@@ -1,13 +1,17 @@
 package com.uchump.prime.Core.Primitive.A_I;
 
 import java.util.Comparator;
+import java.util.ConcurrentModificationException;
+import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import com.uchump.prime.Core.Primitive.aNode;
 import com.uchump.prime.Core.Primitive.Struct._Map;
 import com.uchump.prime.Core.Primitive.Struct._Map.Entry;
 import com.uchump.prime.Core.Primitive.Struct.aList;
-import com.uchump.prime.Core.Primitive.Struct.aMap;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 import com.uchump.prime.Core.Primitive.Struct.aSet;
 
 import com.uchump.prime.Core.Utils.StringUtils;
@@ -82,16 +86,15 @@ public interface iMap<K, V> extends iIndex<Entry<K, V>> {
 		}
 		return true;
 	}
-	
+
 	@Override
 	public default void remove(Integer at) {
 		this.getKeys().remove(at);
 		this.getValues().remove(at);
 	}
-	
+
 	@Override
-	public default Integer indexOf(Object k)
-	{
+	public default Integer indexOf(Object k) {
 		return this.getKeys().indexOf(k);
 	}
 
@@ -111,19 +114,38 @@ public interface iMap<K, V> extends iIndex<Entry<K, V>> {
 		return this.getEntries().get(i);
 	}
 
-	public default iCollection<Entry<K, V>> getEntries() {
+	public default <E extends Entry<K, V>> iCollection<E> getEntries() {
 		aSet<Entry<K, V>> result = new aSet<Entry<K, V>>();
-		iCollection K = this.getKeys();
-		iCollection V = this.getValues();
+		iCollection<K> K = this.getKeys();
+		iCollection<V> V = this.getValues();
 
-		for (int i = 0; i <= this.size(); i++) {
+		for (int i = 0; i < this.size(); i++) {
 			Entry<K, V> e = new Entry(K.get(i), V.get(i));
 			result.append(e);
 		}
 
-		return result;
+		return (iCollection<E>) result;
 
 	}
+
+	public default <X, Y,E extends _Map.Entry<X,Y>> E newEntry(X key, Y val) {
+		return (E) new _Map.Entry<X, Y>(key, val);
+	}
+
+	public default void forEach(Consumer<? super _Map.Entry<K, V>> action) {
+		this.getEntries().forEach(action);
+	}
+
+	/*public default void forEach(BiConsumer<K, V> action) {
+		Objects.requireNonNull(action);
+		final int expectedModCount = this.getValues().modCount();
+		final _Map.Entry<K, V>[] es = this.getEntries().getComponentData();
+		final int size = this.size();
+		for (int i = 0; this.getValues().modCount() == expectedModCount && i < size; i++)
+			action.accept(es[i].getKey(), es[i].getValue());
+		if (this.getValues().modCount() != expectedModCount)
+			throw new ConcurrentModificationException();
+	}*/
 
 	public static Comparator<_Map.Entry> keyComparator() {
 		return new Comparator<_Map.Entry>() {
@@ -233,8 +255,8 @@ public interface iMap<K, V> extends iIndex<Entry<K, V>> {
 		};
 	}
 
-	public static <K, V> aMap<String, Entry<K, V>> find(iMap<K, V> map, String... terms) {
-		aMap<String, Entry<K, V>> out = new aMap<String, Entry<K, V>>();
+	public static <K, V> aMultiMap<String, Entry<K, V>> find(iMap<K, V> map, String... terms) {
+		aMultiMap<String, Entry<K, V>> out = new aMultiMap<String, Entry<K, V>>();
 		for (Entry<K, V> E : map)
 			for (int i = 0; i < terms.length; i++) {
 				String s = terms[i];
@@ -244,8 +266,8 @@ public interface iMap<K, V> extends iIndex<Entry<K, V>> {
 		return out;
 	}
 
-	public static <K, V> aMap<K, V> search(iMap<K, V> map, String... terms) {
-		aMap<K, V> out = new aMap<K, V>();
+	public static <K, V> aMultiMap<K, V> search(iMap<K, V> map, String... terms) {
+		aMultiMap<K, V> out = new aMultiMap<K, V>();
 		for (Entry<K, V> E : map)
 			for (String s : terms) {
 				if (StringUtils.containsWord("" + E.getKey(), s))
@@ -267,36 +289,33 @@ public interface iMap<K, V> extends iIndex<Entry<K, V>> {
 	}
 
 	public static iMap Sort(iMap m, Comparator c) {
-		iCollection<aMap.Entry> entries = m.getEntries();
+		iCollection<aMultiMap.Entry> entries = m.getEntries();
 
 		entries.sort(c);
 
 		m.clear();
 
 		for (int i = 0; i < entries.size(); i++) {
-			aMap.Entry E = entries.get(i);
+			aMultiMap.Entry E = entries.get(i);
 			m.put(E.getKey(), E.getValue());
 		}
 
 		return m;
 	}
 
-	public default iMap<K,V> filterKey(Predicate<K>...by)
-	{
-		for(Predicate<K> P : by)
-		{
-			for(Entry<K,V> e : this)
-				if(P.test(e.getKey()))
+	public default iMap<K, V> filterKey(Predicate<K>... by) {
+		for (Predicate<K> P : by) {
+			for (Entry<K, V> e : this)
+				if (P.test(e.getKey()))
 					this.remove(e);
 		}
 		return this;
 	}
-	public default iMap<K,V> filterValue(Predicate<V>...by)
-	{
-		for(Predicate<V> P : by)
-		{
-			for(Entry<K,V> e : this)
-				if(P.test(e.getValue()))
+
+	public default iMap<K, V> filterValue(Predicate<V>... by) {
+		for (Predicate<V> P : by) {
+			for (Entry<K, V> e : this)
+				if (P.test(e.getValue()))
 					this.remove(e);
 		}
 		return this;

@@ -1,16 +1,17 @@
 package com.uchump.prime.Core.Primitive.A_I;
 
+import java.io.Serializable;
 import java.util.function.Supplier;
 
 import com.uchump.prime.Core.Primitive.aNode;
 import com.uchump.prime.Core.Primitive.Struct._Array;
 import com.uchump.prime.Core.Primitive.Struct.aList;
 
-public interface iNode<T> extends Comparable, Supplier<T> {
+public interface iNode<T> extends Comparable, Supplier<T>, Cloneable, Serializable{
 
 	// aMap<String,iLambda> Data
 
-	public T get();
+	
 
 	public void set(T to);
 

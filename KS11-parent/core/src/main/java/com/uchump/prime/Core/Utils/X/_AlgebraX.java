@@ -5,7 +5,7 @@ import java.util.function.Function;
 import com.uchump.prime.Core.Math.N_Operator;
 import com.uchump.prime.Core.Math.Utils.aMaths;
 import com.uchump.prime.Core.Primitive.Struct.aList;
-import com.uchump.prime.Core.Primitive.Struct.aMap;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 
 //operator
 public interface _AlgebraX<N> {

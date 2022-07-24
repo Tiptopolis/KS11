@@ -8,7 +8,7 @@ import com.uchump.prime.Core.Math.Primitive.aNumber;
 import com.uchump.prime.Core.Math.Utils.Maths;
 import com.uchump.prime.Core.Primitive.A_I.iDisposable;
 import com.uchump.prime.Core.Primitive.Struct._Map.Entry;
-import com.uchump.prime.Core.Primitive.Struct.aMap;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 import com.uchump.prime.Core.Primitive.Struct.aSet;
 import com.uchump.prime.Core.Utils.StringUtils;
 

@@ -6,7 +6,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Stack;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -18,7 +21,9 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.uchump.prime.Core.Math.N_Operator;
 import com.uchump.prime.Core.Math.Primitive.aVector;
+import com.uchump.prime.Core.Primitive.iFunctor;
 import com.uchump.prime.Core.Primitive.A_I.iCollection;
+import com.uchump.prime.Core.Utils.StringUtils;
 
 import squidpony.squidmath.RNG;
 
@@ -93,16 +98,15 @@ public class uAppUtils {
 		return new Vector3(a.x % b.x, a.y % b.y, a.z % b.z);
 	}
 
-	public static String[] charArray(String s)
-	{
+	public static String[] charArray(String s) {
 		String[] res = new String[s.length()];
-		
-		for(int i =0; i < s.length(); i++)
-			res[i] = ""+s.charAt(i);
-		
+
+		for (int i = 0; i < s.length(); i++)
+			res[i] = "" + s.charAt(i);
+
 		return res;
 	}
-	
+
 	public static void Log() {
 		Log("");
 	}
@@ -111,7 +115,7 @@ public class uAppUtils {
 
 		System.out.println(v.toString());
 	}
-	
+
 	public static void Log(String s) {
 
 		System.out.println(s);
@@ -156,7 +160,17 @@ public class uAppUtils {
 	}
 
 	public static void Log(Supplier s) {
-		Log(s.get());
+		if (s != null && s.get() != null)
+			Log(s.get());
+		else
+			Log("null");
+	}
+
+	public static void Log(iFunctor.Supplier s) {
+		if (s != null && s.get() != null)
+			Log(s.get());
+		else
+			Log("null");
 	}
 
 	public static void Page() {
@@ -299,6 +313,10 @@ public class uAppUtils {
 		return clazz.isInstance(targetClass);
 	}
 
+	public boolean isArray(Object o) {
+		return o.getClass().isArray();
+	}
+
 	//
 	////
 	// @Annotation Reflection hax
@@ -400,6 +418,18 @@ public class uAppUtils {
 			return obj.getClass().getSimpleName() + "@" + Integer.toHexString(obj.hashCode());
 	}
 
+	public static String toToken(Class obj) {
+		String tag = "";
+		tag = obj.getSimpleName();
+		return "<" + tag + ">";
+	}
+
+	public static String toToken(Object obj) {
+		String tag = "";
+		tag = obj.getClass().getSimpleName();
+		return "<" + tag + ">";
+	}
+
 	public static <T> Predicate<T> combineFilters(Predicate<T>... predicates) {
 
 		Predicate<T> p = Stream.of(predicates).reduce(x -> true, Predicate::and);
@@ -425,7 +455,7 @@ public class uAppUtils {
 	public static Predicate instanceOf(Object c) {
 		return o -> o.getClass().isAssignableFrom(c.getClass());
 	}
-	
+
 	public static Predicate instanceOf(Object... C) {
 		int l = C.length;
 		Predicate[] P = new Predicate[l];
@@ -435,17 +465,46 @@ public class uAppUtils {
 				P[i] = instanceOf(C[i].getClass());
 		}
 		return any(P);
-	} 
+	}
 
-	public static boolean AllMatch(Predicate P, Object...O)
-	{
-		for(Object o : O)
-			if(!P.test(o))
+	public static Predicate kindOf(Class c) {
+		return o -> StringUtils.isFormOf(o.getClass().getSimpleName(), c.getSimpleName());
+	}
+
+	public static Predicate kindOf(Object c) {
+		return kindOf(c.getClass());
+	}
+
+	public static Predicate kindOf(Class... C) {
+		int l = C.length;
+		Predicate[] P = new Predicate[l];
+		P[0] = kindOf(C[0]);
+		for (int i = 0; i < l; i++) {
+			if (i != 0)
+				P[i] = kindOf(C[i]);
+		}
+		return any(P);
+	}
+
+	public static Predicate kindOf(Object... C) {
+		int l = C.length;
+		Predicate[] P = new Predicate[l];
+		P[0] = kindOf(C[0].getClass());
+		for (int i = 0; i < l; i++) {
+			if (i != 0)
+				P[i] = kindOf(C[i].getClass());
+		}
+		return any(P);
+	}
+
+	public static boolean AllMatch(Predicate P, Object... O) {
+		for (Object o : O)
+			if (!P.test(o))
 				return false;
-		
+
 		return true;
 	}
-	
+
 	public static <T> Predicate<T> isValue(T v) {
 		if (v instanceof Number)
 			return o -> N_Operator.isEqual((Number) o, (Number) v);
@@ -467,6 +526,7 @@ public class uAppUtils {
 	public static <T> Predicate<T> isReference(T v) {
 		return o -> o == v;
 	}
+
 	public static <T> Predicate<T> isAnyReference(T... v) {
 		int l = v.length;
 		Predicate[] P = new Predicate[l];
@@ -477,7 +537,7 @@ public class uAppUtils {
 		}
 		return any(P);
 	}
-	
+
 	public static Predicate any(Predicate... p) {
 		Predicate init = p[0];
 		if (p.length > 1) {
@@ -498,5 +558,27 @@ public class uAppUtils {
 			return out;
 		} else
 			return init;
+	}
+
+	public static BiFunction equals() {
+		return (a, b) -> {
+			return a.equals(b);
+		};
+	}
+
+	public static Function<Comparable, Integer> comparison(Comparable a) {
+		return (o) -> (a.compareTo(o));
+	}
+
+	public static Comparator compareUsing(Function f) {
+		return Comparator.comparing(f);
+	}
+
+	public static Comparator equality() {
+		return compareUsing((Function) equals());
+	}
+
+	public static Predicate isEqual(Object other) {
+		return (o) -> (o == other || o.equals(other));
 	}
 }

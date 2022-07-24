@@ -10,9 +10,9 @@ import com.uchump.prime.Core.Math.Utils.aMaths;
 import com.uchump.prime.Core.Primitive.aValue;
 import com.uchump.prime.Core.Primitive.A_I.iCollection;
 import com.uchump.prime.Core.Primitive.Struct.aList;
-import com.uchump.prime.Core.Primitive.Struct.aMap;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 import com.uchump.prime.Core.Primitive.Struct.aSet;
-import com.uchump.prime.Core.Primitive.Struct.aSetMap;
+import com.uchump.prime.Core.Primitive.Struct.aMap;
 import com.uchump.prime.Core.Primitive.Utils.aThingCounter;
 
 public abstract class iCypher {
@@ -148,15 +148,15 @@ public abstract class iCypher {
 		return out;
 	}
 
-	public static aMap<String, aValue> paramSig(aValue... values) {
-		aMap<String, aValue> rtn = new aMap<String, aValue>();
+	public static aMultiMap<String, aValue> paramSig(aValue... values) {
+		aMultiMap<String, aValue> rtn = new aMultiMap<String, aValue>();
 		for (aValue v : values) {
 			rtn.put(v.label(), v);
 		}
 		return rtn;
 	}
 
-	public static aMap<String, aValue> paramSig(Object... values) {
+	public static aMultiMap<String, aValue> paramSig(Object... values) {
 
 		aList<aValue> vals = new aList<aValue>();
 
@@ -167,14 +167,14 @@ public abstract class iCypher {
 				vals.append((aValue) values[i]);
 		}
 
-		aMap<String, aValue> rtn = new aMap<String, aValue>();
+		aMultiMap<String, aValue> rtn = new aMultiMap<String, aValue>();
 		for (aValue v : vals) {
 			rtn.put(v.label(), v);
 		}
 		return rtn;
 	}
 
-	public static aMap<String, aValue> inputSig(Object... values) {
+	public static aMultiMap<String, aValue> inputSig(Object... values) {
 		int rdx = DefaultResources.ENGLISH_LETTERS_UPPER.length();
 
 		aList<aValue> vals = new aList<aValue>();
@@ -187,7 +187,7 @@ public abstract class iCypher {
 				vals.append((aValue) values[i]);
 		}
 
-		aMap<String, aValue> rtn = new aMap<String, aValue>();
+		aMultiMap<String, aValue> rtn = new aMultiMap<String, aValue>();
 		for (aValue v : vals) {
 			rtn.put(v.label(), v);
 		}
@@ -263,11 +263,11 @@ public abstract class iCypher {
 		return res;
 	}
 
-	public static aSetMap<String, String> staticLinkMap(String... keys) {
+	public static aMap<String, String> staticLinkMap(String... keys) {
 		// so: KeySymbol[1] -> In.A
 
-		aMap<String, aValue> inp = inputSig(keys);
-		aSetMap<String, String> res = new aSetMap<String, String>();
+		aMultiMap<String, aValue> inp = inputSig(keys);
+		aMap<String, String> res = new aMap<String, String>();
 
 		for (int i = 0; i < keys.length; i++) {
 			res.put(keys[i], inp.keys.get(i));
@@ -384,10 +384,10 @@ public abstract class iCypher {
 		return res;
 	}
 
-	public static aMap<String, String> decompMap1(String s) {
+	public static aMultiMap<String, String> decompMap1(String s) {
 		// myString.split("[\\(||\\)]");
 
-		aMap<String, String> res = new aMap<String, String>();
+		aMultiMap<String, String> res = new aMultiMap<String, String>();
 		String[] symbols = new String[] { "T:", "[]", "{}", "()", "<>", "C:", " " };
 
 		// String sqr = "[]";

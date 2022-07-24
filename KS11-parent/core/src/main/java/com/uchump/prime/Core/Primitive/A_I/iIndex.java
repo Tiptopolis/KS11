@@ -35,7 +35,7 @@ public interface iIndex<T> extends iGroup<Integer, T> {
 				i = s - Math.abs(s + i);
 		}
 
-		if (i > s) {
+		if (i >= s) {
 			i = (i % s);
 		}
 		return i;

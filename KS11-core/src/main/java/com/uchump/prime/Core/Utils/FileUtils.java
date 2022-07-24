@@ -8,14 +8,14 @@ import java.util.Properties;
 import com.uchump.prime.Core.Primitive.aValue;
 import com.uchump.prime.Core.Primitive.A_I.iCollection;
 import com.uchump.prime.Core.Primitive.Struct.aList;
-import com.uchump.prime.Core.Primitive.Struct.aMap;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 
 public class FileUtils {
 
 
-	public static aMap<String, aList<String>> mapFolder(File folder) {
-		aMap<String, aList<String>> dirFiles = new aMap<String, aList<String>>();
-		aList<aMap<String, aList<String>>> rec = new aList<aMap<String, aList<String>>>();
+	public static aMultiMap<String, aList<String>> mapFolder(File folder) {
+		aMultiMap<String, aList<String>> dirFiles = new aMultiMap<String, aList<String>>();
+		aList<aMultiMap<String, aList<String>>> rec = new aList<aMultiMap<String, aList<String>>>();
 		if (folder.isDirectory()) {
 
 			aList<String> fileNames = new aList<String>();
@@ -33,7 +33,7 @@ public class FileUtils {
 		}
 		
 		if(!rec.isEmpty())
-			for(aMap<String, aList<String>> m : rec)
+			for(aMultiMap<String, aList<String>> m : rec)
 				dirFiles.put(m.getEntries());
 		return dirFiles;
 	}

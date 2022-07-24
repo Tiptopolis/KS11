@@ -8,18 +8,18 @@ import com.uchump.prime.Core.Primitive.aNode;
 import com.uchump.prime.Core.Primitive.A_I.iCollection;
 import com.uchump.prime.Core.Primitive.A_I.iMap;
 import com.uchump.prime.Core.Primitive.Struct._Map.Entry;
-import com.uchump.prime.Core.Primitive.Struct.aMap;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 import com.uchump.prime.Core.Primitive.Struct.aSet;
-import com.uchump.prime.Core.Primitive.Struct.aSetMap;
+import com.uchump.prime.Core.Primitive.Struct.aMap;
 
 public class aThingCounter<T> {
 
-	public aMap<T, aNode<Integer>> things;
+	public aMultiMap<T, aNode<Integer>> things;
 	int sum = 0;
 
 	public aThingCounter(T... things) {
 		this.sum = things.length;
-		this.things = new aMap<T, aNode<Integer>>();
+		this.things = new aMultiMap<T, aNode<Integer>>();
 		for (int i = 0; i < things.length; i++) {
 			if (!this.things.containsKey(things[i]))
 				this.things.put(things[i], new aNode<Integer>(1));
@@ -31,7 +31,7 @@ public class aThingCounter<T> {
 	}
 
 	public aThingCounter(iCollection<T> things) {
-		this.things = new aMap<T, aNode<Integer>>();
+		this.things = new aMultiMap<T, aNode<Integer>>();
 		for (int i = 0; i < things.size(); i++) {
 			if (!this.things.containsKey(things.get(i)))
 				this.things.put((T) things.get(i), new aNode<Integer>(1));
@@ -123,8 +123,8 @@ public class aThingCounter<T> {
 		this.things = null;
 	}
 
-	public aSetMap<T, Float> FreqMap() {
-		aSetMap<T, Float> res = new aSetMap<T, Float>();
+	public aMap<T, Float> FreqMap() {
+		aMap<T, Float> res = new aMap<T, Float>();
 
 		for (T t : this.things.keys)
 			res.put(t, this.frequencyOf(t));

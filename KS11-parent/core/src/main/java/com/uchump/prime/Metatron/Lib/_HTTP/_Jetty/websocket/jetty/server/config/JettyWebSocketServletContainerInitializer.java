@@ -1,0 +1,98 @@
+package com.uchump.prime.Metatron.Lib._HTTP._Jetty.websocket.jetty.server.config;
+
+import java.util.Set;
+import javax.servlet.ServletContainerInitializer;
+import javax.servlet.ServletContext;
+
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.servlet.ServletContextHandler;
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.websocket.core.common.WebSocketComponents;
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.websocket.core.server.WebSocketMappings;
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.websocket.core.server.WebSocketServerComponents;
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.websocket.jetty.server.JettyWebSocketServerContainer;
+
+//import com.uchump.prime.Metatron.Lib._HTTP._Jetty.websocket.server.JettyWebSocketServerContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * ServletContext configuration for Jetty Native WebSockets API.
+ */
+public class JettyWebSocketServletContainerInitializer implements ServletContainerInitializer
+{
+    private static final Logger LOG = LoggerFactory.getLogger(JettyWebSocketServletContainerInitializer.class);
+    private final Configurator configurator;
+
+    public JettyWebSocketServletContainerInitializer()
+    {
+        this(null);
+    }
+
+    public JettyWebSocketServletContainerInitializer(Configurator configurator)
+    {
+        this.configurator = configurator;
+    }
+
+    public interface Configurator
+    {
+        void accept(ServletContext servletContext, JettyWebSocketServerContainer container);
+    }
+
+    /**
+     * Configure the {@link ServletContextHandler} to call the {@link JettyWebSocketServletContainerInitializer}
+     * during the {@link ServletContext} initialization phase.
+     *
+     * @param context the context to add listener to.
+     * @param configurator a lambda that is called to allow the {@link WebSocketMappings} to
+     * be configured during {@link ServletContext} initialization phase
+     */
+    public static void configure(ServletContextHandler context, Configurator configurator)
+    {
+        if (!context.isStopped())
+            throw new IllegalStateException("configure should be called before starting");
+        context.addServletContainerInitializer(new JettyWebSocketServletContainerInitializer(configurator));
+    }
+
+    /**
+     * Immediately initialize the {@link ServletContextHandler} with the default {@link JettyWebSocketServerContainer}.
+     *
+     * <p>
+     * This method is typically called from {@link #onStartup(Set, ServletContext)} itself or from
+     * another dependent {@link ServletContainerInitializer} that requires minimal setup to
+     * be performed.
+     * </p>
+     * <p>
+     * This method SHOULD NOT BE CALLED by users of Jetty.
+     * Use the {@link #configure(ServletContextHandler, Configurator)} method instead.
+     * </p>
+     * <p>
+     * This will return the default {@link JettyWebSocketServerContainer} if already initialized,
+     * and not create a new {@link JettyWebSocketServerContainer} each time it is called.
+     * </p>
+     *
+     * @param context the context to work with
+     * @return the default {@link JettyWebSocketServerContainer}
+     */
+    private static JettyWebSocketServerContainer initialize(ServletContextHandler context)
+    {
+        WebSocketComponents components = WebSocketServerComponents.ensureWebSocketComponents(context.getServer(), context.getServletContext());
+        JettyWebSocketServerContainer container = JettyWebSocketServerContainer.ensureContainer(context.getServletContext());
+        if (LOG.isDebugEnabled())
+            LOG.debug("initialize {} {}", container, components);
+
+        return container;
+    }
+
+    @Override
+    public void onStartup(Set<Class<?>> c, ServletContext context)
+    {
+        ServletContextHandler contextHandler = ServletContextHandler.getServletContextHandler(context, "Jetty WebSocket SCI");
+        JettyWebSocketServerContainer container = JettyWebSocketServletContainerInitializer.initialize(contextHandler);
+        if (LOG.isDebugEnabled())
+            LOG.debug("onStartup {}", container);
+
+        if (configurator != null)
+        {
+            configurator.accept(context, container);
+        }
+    }
+}

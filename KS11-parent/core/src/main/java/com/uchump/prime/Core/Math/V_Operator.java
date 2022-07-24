@@ -1,6 +1,10 @@
 package com.uchump.prime.Core.Math;
 
 import static com.uchump.prime.Core.uAppUtils.*;
+
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
+import com.uchump.prime.Core.Math.Primitive.aMatrix;
 import com.uchump.prime.Core.Math.Primitive.aVector;
 import com.uchump.prime.Core.Math.Utils.Maths;
 
@@ -36,6 +40,13 @@ public abstract class V_Operator {
 		return a;
 	}
 
+	public static Number add(aVector v, aMatrix m) {
+		for (aVector N : m.getComponentData())
+			v.add(N);
+
+		return v;
+	}
+
 	//// [SUB]->(a-b)
 	public static aVector sub(aVector a, Number b) {
 		if (b instanceof aVector)
@@ -63,6 +74,12 @@ public abstract class V_Operator {
 			a.setAt(i, r);
 		}
 		return a;
+	}
+
+	public static Number sub(aVector v, aMatrix m) {
+		for (aVector N : m.getComponentData())
+			v.sub(N);
+		return v;
 	}
 
 	//// [MUL]->(a*b)
@@ -94,6 +111,12 @@ public abstract class V_Operator {
 		return a;
 	}
 
+	public static Number mul(aVector v, aMatrix m) {
+		for (aVector N : m.getComponentData())
+			v.mul(N);
+		return v;
+	}
+
 	//// [DIV]->(a/b)
 	public static aVector div(aVector a, Number b) {
 		if (b instanceof aVector)
@@ -121,6 +144,12 @@ public abstract class V_Operator {
 			a.setAt(i, r);
 		}
 		return a;
+	}
+
+	public static Number div(aVector v, aMatrix m) {
+		for (aVector N : m.getComponentData())
+			v.div(N);
+		return v;
 	}
 
 ////[POW]->(a^b)
@@ -430,7 +459,7 @@ public abstract class V_Operator {
 		return result;
 	}
 
-	//// [CRS] outter-product
+	//// [CRS] - outter-product
 
 	public static aVector crs2d(aVector a, aVector b) {
 
@@ -464,6 +493,7 @@ public abstract class V_Operator {
 		return a.ncrs(b).collapseLeft();
 	}
 
+	//outter product
 	public static aVector crs(aVector a, aVector<Number> b) {
 
 		// I=(A*B-B*A)
@@ -556,5 +586,12 @@ public abstract class V_Operator {
 
 		a.value = N_Operator.resolveTo(a.value, at);
 		return a;
+	}
+
+	public static Number sum(aVector... v) {
+		aVector V = new aVector();
+		for (aVector a : v)
+			V.add(a.cpy());
+		return V.sum();
 	}
 }

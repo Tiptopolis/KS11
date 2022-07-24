@@ -1,5 +1,7 @@
 package com.uchump.prime.Core.Primitive;
 
+import static com.uchump.prime.Core.uAppUtils.*;
+
 import java.util.Iterator;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -14,18 +16,21 @@ import com.uchump.prime.Core.Primitive.A_I.iMap;
 import com.uchump.prime.Core.Primitive.A_I.iNode;
 import com.uchump.prime.Core.Primitive.Struct._Array;
 import com.uchump.prime.Core.Primitive.Struct.aList;
-import com.uchump.prime.Core.Primitive.Struct.aMap;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 import com.uchump.prime.Core.Primitive.Struct.aSet;
-import com.uchump.prime.Core.Primitive.Struct.aSetMap;
+import com.uchump.prime.Core.Primitive.Struct.aMap;
 
-public class aGroup<N extends Number, T> extends aNode<iCollection<T>> implements iGroup<N, iNode<T>> {
+public class aGroup<N extends Number, T> extends aNode<iCollection<T>> implements iGroup<N, T> {
+	
+
 	// defacto NameSpace, basis of type
-	//sibling nodes link to each other @ phase0 of this group & @ -1 to group itself
+	// sibling nodes link to each other @ phase0 of this group & @ -1 to group
+	// itself
 	public Supplier<Boolean> isTrivial = () -> {
 		return this.size() == 1;
 	};
 
-	public aSetMap<N, iNode<T>> members;
+	public aMap<N, T> members;
 	public Function<Predicate[], aGroup> Subgroup = (Predicate[] p) -> {
 		return null;
 	};
@@ -36,122 +41,149 @@ public class aGroup<N extends Number, T> extends aNode<iCollection<T>> implement
 
 	public aGroup(aGroup G) {
 		super();
-		this.members = (aSetMap<N, iNode<T>>) G.members.cpy();
+		this.members = (aMap<N, T>) G.members.cpy();
 	}
 
-	public aGroup(aGroup G, iCollection<Predicate> P) {
-
+	public aGroup(aGroup G, Predicate... P) {
+		super();
+		this.members = (aMap<N, T>) (G.members.cpy().filterValue(P));
 	}
 
-
+	@Override
+	public N getIndexType() {
+		return (N) N_Operator.resolveTo(1, this.firstIndex());
+	}
 
 	@Override
 	public N firstIndex() {
-
+		if (this.members.keys == null || this.members.keys.isEmpty())
+			return (N) ((Number) 0);
 		Number n = N_Operator.minOf(this.members.keys);
 		return (N) n;
 	}
 
+	public N lastIndex() {
+		if (this.members.keys == null || this.members.keys.isEmpty())
+			return (N) ((Number) 0);
+
+		Number n = N_Operator.maxOf(this.members.keys);
+		Log("!!! " + n);
+		return (N) n;
+	}
+
 	@Override
-	public Iterator<iNode<T>> iterator() {
+	public Iterator<T> iterator() {
 		return this.members.values.iterator();
 	}
-	
+
 	@Override
-	public aSetMap<N,iNode<T>> toMap()
-	{
+	public aMap<N, T> toMap() {
 		return this.members;
-		
+
 	}
 
 	@Override
 	public iGroup join(iGroup other) {
-		
+
 		this.members.put(other.toMap().getEntries());
 		return this;
 	}
 
 	@Override
-	public void insert(N at, iNode<T> member) {
+	public void insert(N at, T member) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
-
-	
 	@Override
-	public iGroup with(iNode<T>... members) {
-		// TODO Auto-generated method stub
-		return null;
+	public iGroup with(T... members) {
+		if (this.members == null)
+			this.members = new aMap<N, T>();
+		for (T t : members) {
+			N l = this.lastIndex();
+			this.members.put(l, t);
+		}
+
+		return this;
 	}
 
 	@Override
 	public iGroup with(iGroup other) {
-		// TODO Auto-generated method stub
-		return null;
+
+		if (other.isEmpty())
+			return this;
+
+		if (this.members == null)
+			this.members = new aMap<N, T>();
+
+		this.members.with(other);
+
+		return this;
 	}
 
 	@Override
-	public iNode<T> get(N index) {
-		// TODO Auto-generated method stub
-		return null;
+	public T get(N index) {
+		return this.members.get(index);
 	}
 
 	@Override
-	public void set(N i, iNode<T> o) {
-		// TODO Auto-generated method stub
-		
+	public void set(N i, T o) {
+		this.members.set(i, o);
+
 	}
 
 	@Override
 	public N indexOf(Object member) {
-		// TODO Auto-generated method stub
-		return null;
+		return (N) this.members.values.indexOf(member);
 	}
 
 	@Override
 	public void remove(N at) {
-		// TODO Auto-generated method stub
-		
+		this.members.removeKey(at);
+
 	}
 
 	@Override
-	public boolean contains(iNode<T> entry) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean contains(T entry) {
+		return this.members.containsValue(entry);
 	}
 
 	@Override
 	public boolean isEmpty() {
-		// TODO Auto-generated method stub
-		return false;
+		if (this.members == null)
+			return true;
+		return this.members.isEmpty();
 	}
 
 	@Override
 	public int size() {
-		// TODO Auto-generated method stub
-		return 0;
+		return this.members.size();
 	}
 
 	@Override
 	public iGroup resize(int to) {
-		// TODO Auto-generated method stub
-		return null;
+		return this.members.resize(to);
 	}
 
 	@Override
 	public void clear() {
-		// TODO Auto-generated method stub
-		
+		this.members.clear();
 	}
 
 	@Override
-	public iNode<T>[] toArray() {
-		// TODO Auto-generated method stub
-		return null;
+	public T[] toArray() {
+		return this.members.values.toArray();
 	}
 
+	@Override
+	public iCollection<T> collectAll() {
+		return this.members.values;
+	}
+
+	public String toToken() {
+		String tag = "";
+		tag = this.getClass().getSimpleName();
+		return "<" + tag + ">";
+	}
 	
-
-
 }

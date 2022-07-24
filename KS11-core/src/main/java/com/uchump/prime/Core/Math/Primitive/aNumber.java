@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.uchump.prime.Core.Math.N_Operator;
 import com.uchump.prime.Core.Math.Primitive.A_I.iNumeric;
 import com.uchump.prime.Core.Primitive.A_I.iNode;
+import com.uchump.prime.Core.Utils.StringUtils;
 
 public class aNumber extends Number implements iNode<Number>, CharSequence, iNumeric {
 
@@ -13,7 +14,7 @@ public class aNumber extends Number implements iNode<Number>, CharSequence, iNum
 	public Supplier<Number> Value = () -> this.value;
 
 	public aNumber() {
-
+		
 	}
 
 	public aNumber(Number n) {
@@ -22,8 +23,10 @@ public class aNumber extends Number implements iNode<Number>, CharSequence, iNum
 	}
 
 	public aNumber(CharSequence s) {
-
+		this.value = StringUtils.parseNum("" + s);
 	}
+	
+	
 
 	public Number resolveToThis(Number n) {
 		return N_Operator.resolveTo(n, this.value);
@@ -41,26 +44,30 @@ public class aNumber extends Number implements iNode<Number>, CharSequence, iNum
 
 	@Override
 	public int intValue() {
-		return this.value.intValue();
+		return this.numberValue().intValue();
 	}
 
 	@Override
 	public long longValue() {
-		return this.value.longValue();
+		return this.numberValue().longValue();
 	}
 
 	@Override
 	public float floatValue() {
-		return this.value.floatValue();
+		return this.numberValue().floatValue();
 	}
 
 	@Override
 	public double doubleValue() {
-		return this.value.doubleValue();
+		return this.numberValue().doubleValue();
 	}
 
 	public Number numberValue() {
-		return this.floatValue();
+		return this.value;
+	}
+
+	public String stringValue() {
+		return "" + this.numberValue();
 	}
 
 	@Override
@@ -155,5 +162,7 @@ public class aNumber extends Number implements iNode<Number>, CharSequence, iNum
 		}
 
 	}
+
+
 
 }

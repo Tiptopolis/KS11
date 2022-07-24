@@ -3,14 +3,14 @@ package com.uchump.prime.Core.Primitive.Utils;
 import com.uchump.prime.Core.Math.Primitive.aVector;
 import com.uchump.prime.Core.Primitive.A_I.iEnum;
 import com.uchump.prime.Core.Primitive.Struct.aList;
-import com.uchump.prime.Core.Primitive.Struct.aMap;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 import com.uchump.prime.Core.Utils.StringUtils;
 
 public class aCharIndexer {
 //<String, aVector>, Data->Vector map
 	// takes String and reports
 	// (fI,C,lI)
-	public aMap<String, aVector<Integer>> things = new aMap<String, aVector<Integer>>();
+	public aMultiMap<String, aVector<Integer>> things = new aMultiMap<String, aVector<Integer>>();
 
 	public aCharIndexer(String s) {
 		aList<String> decomp = StringUtils.toList(StringUtils.CharArray(s));

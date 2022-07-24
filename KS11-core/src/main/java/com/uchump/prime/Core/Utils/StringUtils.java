@@ -17,11 +17,11 @@ import com.uchump.prime.Core.Math.Primitive.aVector;
 import com.uchump.prime.Core.Primitive.A_I.iCollection;
 import com.uchump.prime.Core.Primitive.A_I.iGroup;
 import com.uchump.prime.Core.Primitive.Struct.aList;
-import com.uchump.prime.Core.Primitive.Struct.aMap;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 import com.uchump.prime.Core.Primitive.Struct._Array;
 import com.uchump.prime.Core.Primitive.Struct._Map.Entry;
 import com.uchump.prime.Core.Primitive.Struct.aSet;
-import com.uchump.prime.Core.Primitive.Struct.aSetMap;
+import com.uchump.prime.Core.Primitive.Struct.aMap;
 import com.uchump.prime.Core.Primitive.Utils.aThingCounter;
 
 public class StringUtils {
@@ -33,6 +33,15 @@ public class StringUtils {
 	// [(N) <OP> (N)] -> {(N),<OP>,(N)}
 	// node patterns
 
+	public static String indent(int len)
+	{
+		String s = "";
+		for(int i =0; i < len; i++)
+			s+=" ";
+		return s;
+			
+	}
+	
 	public static String substring(String source, int beginIndex, int endIndex) {
 		if (source == null || source.isEmpty())
 			return "";
@@ -45,12 +54,22 @@ public class StringUtils {
 		return source.substring(beginIndex, endIndex);
 	}
 
+	public static boolean substringEquals(String a, String b, int start) {
+		int end = Math.min(a.length(), b.length());
+		if (end > start)
+			return false;
+		return substring(a, start, end).endsWith(substring(b, start, end));
+	}
+
 	// need a WhyEquals in Node & Type
 	public static boolean isFormOf(String A, String B) {
-
+		if (A == B)
+			return true;
+		
 		if (A.toLowerCase().equals(B.toLowerCase()))
 			return true;
-		else
+
+
 			return false;
 	}
 
@@ -95,12 +114,12 @@ public class StringUtils {
 		return amount;
 	}
 
-	public static aMap<String, Integer> countSymbols(String s) {
-		aMap<String, Integer> res = GeneralUtils.Counter(CharArray(s));
+	public static aMultiMap<String, Integer> countSymbols(String s) {
+		aMultiMap<String, Integer> res = GeneralUtils.Counter(CharArray(s));
 		return res;
 	}
 
-	public static aMap<String, Integer> countSymbolsFrom(String s, String from) {
+	public static aMultiMap<String, Integer> countSymbolsFrom(String s, String from) {
 
 		aList<String> R1 = toList(CharArray(s));
 		aList<String> R2 = (aList<String>) R1.intersection(toList(CharArray(from)));
@@ -120,11 +139,10 @@ public class StringUtils {
 		return new aList<String>(s);
 	}
 
-	public static String join(String...to)
-	{
+	public static String join(String... to) {
 		String r = "";
-		for(int i =0; i < to.length; i++)
-			r+=to[i];
+		for (int i = 0; i < to.length; i++)
+			r += to[i];
 		return r;
 	}
 
@@ -166,6 +184,21 @@ public class StringUtils {
 	}
 
 	public static Predicate<String> someFormOf(String A, String... B) {
+
+		return new Predicate<String>() {
+
+			@Override
+			public boolean test(String t) {
+				for (String s : B)
+					if (isFormOf(s, t))
+						return false;
+				return true;
+			}
+
+		};
+	}
+
+	public static Predicate<String> isFormOf(String... B) {
 
 		return new Predicate<String>() {
 
@@ -441,10 +474,10 @@ public class StringUtils {
 
 	}
 
-	public static aMap<String, Integer> charIndexMap(String thing) {
+	public static aMultiMap<String, Integer> charIndexMap(String thing) {
 		// map characters to specific indices of the given String
 
-		aMap<String, Integer> res = new aMap<String, Integer>();
+		aMultiMap<String, Integer> res = new aMultiMap<String, Integer>();
 
 		for (int i = 0; i < thing.length(); i++)
 			res.put("" + thing.charAt(i), i);
@@ -500,6 +533,10 @@ public class StringUtils {
 		String F = "" + f;
 		int i = F.lastIndexOf(".");
 		return F.length() - i;
+	}
+
+	public static boolean beginsWith(String a, String b) {
+		return substringEquals(a, b, 0);
 	}
 
 	public static boolean startsWith(String a, String b) {
@@ -636,7 +673,7 @@ public class StringUtils {
 		return result;
 	}
 
-	public static <T> aMap<String, T> resolveCsvToMap(String input, String delimiter) {
+	public static <T> aMultiMap<String, T> resolveCsvToMap(String input, String delimiter) {
 		String starts = "({[<";
 		String ends = ")}]>";
 		int first = 0;
@@ -644,7 +681,7 @@ public class StringUtils {
 
 		String enDex = "";
 		// aList<T> result = new aList<T>();
-		aMap<String, T> result = new aMap<String, T>();
+		aMultiMap<String, T> result = new aMultiMap<String, T>();
 
 		StringBuilder process = new StringBuilder(input);
 		// Log(input + " <<<<<");
@@ -730,7 +767,7 @@ public class StringUtils {
 
 		int segments = 1;
 		aList<Integer> segmentsIndex = new aList<Integer>();
-		aMap<String, aVector> blocksIndex = new aMap<String, aVector>(); // <String, aValue.Range>
+		aMultiMap<String, aVector> blocksIndex = new aMultiMap<String, aVector>(); // <String, aValue.Range>
 
 		for (int i = 0; i < input.length(); i++) {
 			if (input.charAt(i) == ',') {
@@ -764,8 +801,8 @@ public class StringUtils {
 		return L.toArray();
 	}
 
-	public static aMap<String, String> parseBlocks(String s) {
-		aMap<String, String> Res = new aMap<String, String>();
+	public static aMultiMap<String, String> parseBlocks(String s) {
+		aMultiMap<String, String> Res = new aMultiMap<String, String>();
 		// String[] S = s.split("\\(([^()]*)\\)");
 		// Log(s.split("\\[(.*?)\\]"));
 		// Log(s.split("\\(([^()]*)\\)"));

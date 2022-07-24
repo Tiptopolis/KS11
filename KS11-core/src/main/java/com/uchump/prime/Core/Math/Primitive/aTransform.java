@@ -11,7 +11,7 @@ import com.uchump.prime.Core.Primitive.aNode;
 import com.uchump.prime.Core.Primitive.A_I.iCollection;
 import com.uchump.prime.Core.Primitive.A_I.iMap;
 import com.uchump.prime.Core.Primitive.Struct.aList;
-import com.uchump.prime.Core.Primitive.Struct.aMap;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 import com.uchump.prime.Core.Primitive.Struct._Map.Entry;
 import com.uchump.prime.Core.Primitive.Struct.aSet;
 import com.uchump.prime.Core.Utils.StringUtils;
@@ -44,6 +44,9 @@ public class aTransform extends aNode<aTransform> implements iTransform {
 
 		this.shared.put("_Parent", this._Parent);
 		this.shared.put("_Children", this._Children);
+
+		if (!nuts)
+			this.setParent(SpatialBasis);
 	}
 
 	public aTransform() {
@@ -72,6 +75,17 @@ public class aTransform extends aNode<aTransform> implements iTransform {
 		this.scale(from.scale());
 		this.normal(from.normal());
 
+	}
+
+	public aTransform(aVector at) {
+		this(true);
+		this.setPosition(at);
+	}
+
+	public aTransform(aVector at, aTransform basis) {
+		this(false);		
+		this.setPosition(at);
+		this.setParent(basis);
 	}
 
 	public aTransform(aVector pos, aVector rot, aVector scl) {
@@ -127,8 +141,8 @@ public class aTransform extends aNode<aTransform> implements iTransform {
 		this.setParent(parent);
 	}
 
-	public aTransform(aMap<String, Object> params) {
-		aMap<String, Entry<String, Object>> found = iMap.find(params, "position", "rotation", "scale", "normal");
+	public aTransform(aMultiMap<String, Object> params) {
+		aMultiMap<String, Entry<String, Object>> found = iMap.find(params, "position", "rotation", "scale", "normal");
 
 		if (found.containsKeys("position", "rotation", "scale", "normal")) {
 			Entry<String, Object> E = null;
@@ -353,18 +367,18 @@ public class aTransform extends aNode<aTransform> implements iTransform {
 	public String toString() {
 		String s = "<aTransform>";
 
-		aMap.Entry e = new aMap.Entry("LOCAL", "WORLD");
+		aMultiMap.Entry e = new aMultiMap.Entry("LOCAL", "WORLD");
 		s += "        " + e + "\n";
-		e = new aMap.Entry("Position",
+		e = new aMultiMap.Entry("Position",
 				"" + this.getLocalPosition().toElementString() + ":" + this.getPosition().toElementString());
 		s += e + "\n";
-		e = new aMap.Entry("Rotation",
+		e = new aMultiMap.Entry("Rotation",
 				"" + this.getLocalRotation().toElementString() + ":" + this.getRotation().toElementString());
 		s += e + "\n";
-		e = new aMap.Entry("Scale",
+		e = new aMultiMap.Entry("Scale",
 				"" + this.getLocalScale().toElementString() + ":" + this.getScale().toElementString());
 		s += e + "\n";
-		e = new aMap.Entry("Normal",
+		e = new aMultiMap.Entry("Normal",
 				"" + this.getLocalNormal().toElementString() + ":" + this.getNormal().toElementString());
 		s += e + "\n";
 		if (this._Parent != null)

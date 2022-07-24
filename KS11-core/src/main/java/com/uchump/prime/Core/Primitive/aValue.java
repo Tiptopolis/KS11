@@ -17,56 +17,67 @@ import com.uchump.prime.Core.Math.Utils.aGeom;
 import com.uchump.prime.Core.Primitive.A_I.iCollection;
 import com.uchump.prime.Core.Primitive.A_I.iMap;
 import com.uchump.prime.Core.Primitive.Struct.aList;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 import com.uchump.prime.Core.Primitive.Struct.aMap;
-import com.uchump.prime.Core.Primitive.Struct.aSetMap;
 import com.uchump.prime.Core.Utils.StringUtils;
 
-public class aValue<T> extends aMap.Entry<String, T> {
+public class aValue<T> extends aMultiMap.Entry<String, T> {
 
+	public static aValue EMPTY;
 	// aLabeldValue lol, a meme
 	// get() updates and returns last known value
+	static {
+		EMPTY = new aValue("EMPTY",aNode.NULL);
+	}
 	protected boolean exists = true;
 
 	public Supplier<String> Name = () -> this.getKey();
 
 	protected boolean mutable = true;
-	
+
 	public aValue(String name) {
-		super(name, null);		
+		super();
+		this.label = name;
+		this.key = this.label;
+		this.value = null;
+		this.type = (T) Void.class;
 		this.init();
 	}
 
 	public aValue(String name, T val) {
 		super(name, val);
 		this.init();
-		
-		
+
 	}
 
 	public aValue(aValue<T> cpy) {
 		super(cpy.label(), cpy.get());
-		
+
 		this.init();
 	}
 
 	public aValue init() {
 		this.buildIn();
-		this.buildOut();	
-		
+		this.buildOut();
+
 		return this;
 	}
-	protected void buildOut()
-	{
+
+	protected void buildOut() {
 		this.Get = () -> {
 			return this.get();
 		};
-		
+
 	}
-	protected void buildIn()
-	{
-		this.Set = (T t) ->{this.set(t);};
-		this.Put = (String s,Object o) ->{this.set(s, o);};
-		
+
+	protected void buildIn() {
+		this.Set = (T t) -> {
+			this.set(t);
+		};
+		this.Put = (String s, Object o) -> {
+			this.set(s, o);
+		};
+
 	}
 
 	public T get(int i) {
@@ -78,36 +89,21 @@ public class aValue<T> extends aMap.Entry<String, T> {
 		else
 			return null;
 	}
-	
-	public aValue evaluate()
-	{
-		//Override me lol
+
+	public aValue evaluate() {
+		// Override me lol
 		return this;
 	}
-	
-
 
 	@Override
 	public String label() {
 		return this.getKey();
 	}
 
-	@Override
-	public String toString() {
-		String s = "";
 
-		String c = "";
-		String g = "";
-		if (this.get() != null)
-			c = this.get().getClass().getSimpleName();
 
-		if (this.get() != this && this.get() != null)
-			g = "" + this.get();
+	
 
-		s = this.label() + "<" + c + ">" + " = " + g;
-
-		return s;
-	}
 
 	@Override
 	public boolean equals(Object other) {
@@ -122,6 +118,31 @@ public class aValue<T> extends aMap.Entry<String, T> {
 		}
 
 		return false;
+	}
+	
+	@Override
+	public String toToken() {
+		String tag = "";
+
+		if (instanceOf(iCollection.class).test(this.value)) {
+			iCollection C = ((iCollection) this.get());
+			String T = this.get().getClass().getSimpleName();
+			return "(" + C.getClass().getSimpleName() + "[" + C.size() + "]" + C + ")";
+		}
+
+		tag = this.get().getClass().getSimpleName();
+		return "<" + tag + ">";
+	}
+	
+	@Override
+	public String toTag()
+	{
+		return this.getKey() + " = " + this.getValue();
+	}
+	
+	@Override
+	public String toString() {
+		return super.toString();		
 	}
 
 	@Override
@@ -182,12 +203,12 @@ public class aValue<T> extends aMap.Entry<String, T> {
 			return this.update(value).pull();
 		}
 
-		public aMap.Entry<Reference, aNode> enter() {
-			return new aMap.Entry<Reference, aNode>(this, this.get());
+		public aMultiMap.Entry<Reference, aNode> enter() {
+			return new aMultiMap.Entry<Reference, aNode>(this, this.get());
 		}
 
-		public aMap.Entry<String, Object> toEntry() {
-			return new aMap.Entry(this.label(), this.get().get());
+		public aMultiMap.Entry<String, Object> toEntry() {
+			return new aMultiMap.Entry(this.label(), this.get().get());
 		}
 
 		@Override
@@ -201,6 +222,15 @@ public class aValue<T> extends aMap.Entry<String, T> {
 		}
 	}
 
+	
+	public static class Is extends aValue<Boolean>{
+
+		public Is(String name) {
+			super(name,true);
+		}
+		
+	}
+	
 	public static class Range extends aValue<Number> {
 
 		// int range?
@@ -303,7 +333,7 @@ public class aValue<T> extends aMap.Entry<String, T> {
 			// Log(" ___" + expectRes);
 			Number overrun = 0;
 			if (this.ref && (Maths.compare(expectRes, this.max) == 1) || Maths.compare(expectRes, this.min) == -1) {
-				overrun = N_Operator.resolveTo( N_Operator.mod(by, this.max),by);
+				overrun = N_Operator.resolveTo(N_Operator.mod(by, this.max), by);
 
 				// Log(" ***" + overrun);
 				this.dir *= -1;
@@ -316,7 +346,7 @@ public class aValue<T> extends aMap.Entry<String, T> {
 		// return value% of this range
 		public Number interp(Number value) {
 			Number N = N_Operator.lerp(this.min.floatValue(), this.max.floatValue(), value.floatValue());
-			return N_Operator.resolveTo(N,value);
+			return N_Operator.resolveTo(N, value);
 		}
 
 		public Number percentOf(Number value) {
@@ -363,8 +393,8 @@ public class aValue<T> extends aMap.Entry<String, T> {
 		}
 	}
 
-	//
-	public static class Axial<T> extends aValue<aMap<Integer, T>> {
+	// should be aMap<Int,aVal<T>>
+	public static class Axial<T> extends aValue<aMultiMap<Integer, T>> {
 
 		// -2 > tiny
 		// -1 > small
@@ -373,10 +403,10 @@ public class aValue<T> extends aMap.Entry<String, T> {
 		//
 
 		// aNode.Context
-		protected aSetMap<Integer, Object> terms = new aSetMap<Integer, Object>();
+		protected aMap<Integer, Object> terms = new aMap<Integer, Object>();
 
 		public Axial(String name, T[] items) {
-			super(name, new aMap<Integer, T>());
+			super(name, new aMultiMap<Integer, T>());
 			int s = items.length / 2;
 
 			aVector[] addresses = aGeom.interpolate(new aVector(0), new aVector(s));

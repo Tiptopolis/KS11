@@ -24,16 +24,17 @@ import com.uchump.prime.Core.Primitive.A_I.iGroup;
 import com.uchump.prime.Core.Primitive.A_I.iMap;
 import com.uchump.prime.Core.Primitive.Struct._Array;
 import com.uchump.prime.Core.Primitive.Struct.aList;
-import com.uchump.prime.Core.Primitive.Struct.aSetMap;
+import com.uchump.prime.Core.Primitive.Struct.aSet;
+import com.uchump.prime.Core.Primitive.Struct.aMap;
 import com.uchump.prime.Core.Primitive.Utils.aThingCounter;
 import com.uchump.prime.Core.Utils.StringUtils;
 
 public class aVector<N extends Number> extends aNumber implements Iterable<Number>, iCollection<Number> {
 
 	public _Array<Number> elements;
-	public Function<Number,Number> Resolve =(Number n)->{return N_Operator.resolveTo(n, this.value);};
-	
-
+	public Function<Number, Number> Resolve = (Number n) -> {
+		return N_Operator.resolveTo(n, this.value);
+	};
 
 	public aVector() {
 		this(Float.NaN);
@@ -52,7 +53,7 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 			this.append(from.get(i));
 		}
 	}
-	
+
 	public aVector(iCollection<Number> from) {
 		super(resolve(from.get(0)));
 		this.elements = new aList();
@@ -99,14 +100,13 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 		this(quat.x, quat.y, quat.z, quat.w);
 	}
 
-	public static aVector[] fromCollections(iCollection<Number>... C)
-	{
+	public static aVector[] fromCollections(iCollection<Number>... C) {
 		aVector[] V = new aVector[C.length];
-		for(int i =0; i < C.length; i++)
-		V[i] = new aVector(C[i]);
+		for (int i = 0; i < C.length; i++)
+			V[i] = new aVector(C[i]);
 		return V;
 	}
-	
+
 	////////
 	@Override
 	public void appendAll(Number... entries) {
@@ -157,7 +157,7 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 		}
 
 	}
-	
+
 	// lol
 	@Override
 	public Integer indexOf(Object member) {
@@ -188,8 +188,6 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 	public boolean contains(Number entry) {
 		return this.elements.contains(entry);
 	}
-
-
 
 	@Override
 	public void insert(Integer at, Number member) {
@@ -238,6 +236,28 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 		for (int i = this.size() - 1; i > to; i--)
 			this.remove(i);
 		return this;
+	}
+
+	public aSet<aVector> splitEvery(int n) {
+		return splitEvery(n, true);
+	}
+
+	public aSet<aVector> splitEvery(int n, boolean square) {
+		aSet<aVector> r = new aSet<aVector>();
+		aVector v = new aVector();
+		for (int i = 0; i < this.size(); i++) {
+			v.append(this.get(i));
+			if ((i + 1) % n == 0) {
+				r.append(v);
+				v = new aVector();
+			}
+			if (i == this.size() - 1)
+				r.append(v);
+		}
+		if (square)
+			r.get(r.size() - 1).resize(n);
+
+		return r;
 	}
 
 	public aVector truncate(int from, int to) {
@@ -496,7 +516,7 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 		return this.cpy().sub(to.cpy()).nor().scl(-1);
 	}
 
-	//scalar float lol
+	// scalar float lol
 	public static aVector lerp(aVector from, aVector to, float progress) {
 		int size = Math.min(from.size(), to.size());
 
@@ -515,8 +535,7 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 		return lerp(this, other, delta);
 	}
 
-	public static aVector ilerp(aVector from, aVector to, float delta)
-	{
+	public static aVector ilerp(aVector from, aVector to, float delta) {
 		int size = Math.min(from.size(), to.size());
 
 		aVector value = new aVector(size);
@@ -529,16 +548,13 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 
 		return value;
 	}
-	
-	public aVector ilerp(aVector other, float delta)
-	{
-		return ilerp(this,other,delta);
+
+	public aVector ilerp(aVector other, float delta) {
+		return ilerp(this, other, delta);
 	}
-	
-	
-	public static aVector interp(aVector from, aVector to, aVector delta)
-	{
-		int size =   N_Operator.minOf(from.size(),to.size(),delta.size()).intValue();
+
+	public static aVector interp(aVector from, aVector to, aVector delta) {
+		int size = N_Operator.minOf(from.size(), to.size(), delta.size()).intValue();
 		aVector value = new aVector(size);
 		for (int i = 0; i < size; i++) {
 			float f = from.get(i).floatValue();
@@ -549,9 +565,9 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 		}
 
 		return value;
-	
+
 	}
-	
+
 	public aVector clamp(aVector min, aVector max) {
 		for (int i = 0; i < this.size() && i < min.size() && i < max.size(); i++) {
 			Number f = N_Operator.clamp(this.get(i), min.get(i), max.get(i));
@@ -998,6 +1014,7 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 	public Number getLargest() {
 		return N_Operator.maxOf(this.toList());
 	}
+
 	public Number getSmallest() {
 		return N_Operator.minOf(this.toList());
 	}
@@ -1155,28 +1172,26 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 
 		return v;
 	}
-	
-	public Number x()
-	{
-		return this.getDefault(0,this.Resolve.apply(0));
+
+	public Number x() {
+		return this.getDefault(0, this.Resolve.apply(0));
 	}
-	public Number y()
-	{
-		return this.getDefault(1,this.Resolve.apply(0));
+
+	public Number y() {
+		return this.getDefault(1, this.Resolve.apply(0));
 	}
-	public Number z()
-	{
-		return this.getDefault(2,this.Resolve.apply(0));
+
+	public Number z() {
+		return this.getDefault(2, this.Resolve.apply(0));
 	}
-	public Number w()
-	{
-		return this.getDefault(3,this.Resolve.apply(0));
+
+	public Number w() {
+		return this.getDefault(3, this.Resolve.apply(0));
 	}
-	
+
 	@Override
-	public Number numberValue()
-	{
-		return N_Operator.resolveTo(this.size(),this.value);
+	public Number numberValue() {
+		return N_Operator.resolveTo(this.size(), this.value);
 	}
 
 	@Override
@@ -1185,15 +1200,17 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 	}
 
 	@Override
-	public  aSetMap<Integer,Number> toMap() {
-		aSetMap<Integer,Number> M = new aSetMap<Integer,Number>();
-		for(int i =0; i < this.size(); i++)
-			M.put(i,this.get(i));
+	public aMap<Integer, Number> toMap() {
+		aMap<Integer, Number> M = new aMap<Integer, Number>();
+		for (int i = 0; i < this.size(); i++)
+			M.put(i, this.get(i));
 		return M;
 	}
-
-
 	
+	@Override
+	public Integer getIndexType() {
+		return 0;
+	}
 
 
 }

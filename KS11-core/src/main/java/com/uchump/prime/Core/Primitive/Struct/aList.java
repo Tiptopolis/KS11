@@ -30,5 +30,10 @@ public class aList<T> extends _Array<T> {
 			this.append(entries[i]);
 		}
 	}
+	
+	public aList<T> purgeDuplicates()
+	{
+		return this.toSet().toList();
+	}
 
 }

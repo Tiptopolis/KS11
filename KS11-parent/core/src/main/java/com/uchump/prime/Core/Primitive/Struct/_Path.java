@@ -28,11 +28,11 @@ public class _Path<T> extends aLinkedList<T> {
 
 	private String value = "";
 
-	private aMap<String, Integer> ent;
+	private aMultiMap<String, Integer> ent;
 
 	public _Path(String path) {
 		// get min of first indices of each delimiter
-		aMap<String, Integer> R = new aMap<String, Integer>();
+		aMultiMap<String, Integer> R = new aMultiMap<String, Integer>();
 		// R.put(Space,StringUtils.split(path, Space));
 		R.put(Space, path.indexOf(Space));
 		R.put(_NEXT, path.indexOf(_NEXT));

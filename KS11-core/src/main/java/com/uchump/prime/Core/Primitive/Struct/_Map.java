@@ -1,7 +1,18 @@
 package com.uchump.prime.Core.Primitive.Struct;
 
+import static com.uchump.prime.Core.uAppUtils.*;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -21,13 +32,27 @@ public abstract class _Map<K, V> implements iMap<K, V> {
 	public iCollection<V> values;
 
 	public _Map() {
-		this.keys = new aList<K>();
+		this.keys = new aSet<K>();
 		this.values = new aList<V>();
 	}
-	
+
 	public _Map(iCollection<K> k, iCollection<V> v) {
 		this.keys = k;
 		this.values = v;
+	}
+
+	public _Map(Class<iCollection> k, Class<iCollection> v) {
+		this.keys = iCollection.newEmpty(k);
+		this.values = iCollection.newEmpty(v);
+	}
+
+	public _Map(AbstractMap<K, V> M) {
+		this.keys = new aList<K>();
+		this.values = new aList<V>();
+		for (Object o : M.entrySet()) {
+			Map.Entry<K, V> E = (Map.Entry<K, V>) o;
+			this.put(E.getKey(), E.getValue());
+		}
 	}
 
 	@Override
@@ -38,6 +63,8 @@ public abstract class _Map<K, V> implements iMap<K, V> {
 	@Override
 	public void put(K key, Object val) {
 		if (!this.contains(key, val)) {
+			if(this.containsKey(key))
+				key = (K) this.keys.get( this.keys.indexOf(key));
 			this.keys.append(key);
 			this.values.append((V) val);
 		}
@@ -51,6 +78,7 @@ public abstract class _Map<K, V> implements iMap<K, V> {
 
 	public void put(Entry<K, V> E) {
 		this.put(E.getKey(), E.getValue());
+		
 	}
 
 	public void put(Entry<K, V>... E) {
@@ -68,10 +96,13 @@ public abstract class _Map<K, V> implements iMap<K, V> {
 	public iCollection<V> getAll(K key) {
 		aList<V> result = new aList<V>();
 
-		for (Entry<K, V> E : this) {
-			if (E.getKey().equals(key) || this.getKeys() == key)
-				result.append(E.getValue());
+
+		for (int i = 0; i < this.size(); i++) {
+			K k = this.keys.get(i);
+			if (k == key || k.equals(key))
+				result.append(this.values.get(i));
 		}
+
 		return result;
 	}
 
@@ -96,6 +127,8 @@ public abstract class _Map<K, V> implements iMap<K, V> {
 
 	@Override
 	public Entry<K, V> get(Integer index) {
+		if (this.size() == 0)
+			return null;
 		return this.getEntries().get(index);
 	}
 
@@ -121,31 +154,50 @@ public abstract class _Map<K, V> implements iMap<K, V> {
 	}
 
 	public void removeKey(K k) {
-		aList<V> V = (aList<V>) this.getAll(k);
-		aSet<Integer> indices = new aSet<Integer>();
-		for (V v : V)
-			indices.append(this.values.indexOf(v).intValue());
-		indices.sort().reverse();
-		for (Integer I : indices)
-			this.values.remove(I);
-		this.keys.remove(k);
-		this.keys.remove(this.keys.size() - 1);
+		/*
+		 * aList<V> V = (aList<V>) this.getAll(k); aSet<Integer> indices = new
+		 * aSet<Integer>(); for (V v : V)
+		 * indices.append(this.values.indexOf(v).intValue()); indices.sort().reverse();
+		 * 
+		 * for(int i = indices.size()-1; i >0; i--)
+		 * this.values.remove(indices.get(i).intValue());
+		 * 
+		 * this.keys.remove(k); this.keys.remove(this.keys.size() - 1);
+		 */
+
+		_Map M = this.cpy();
+		this.clear();
+		for (Object e : M.getEntries())
+			if (e instanceof Entry) {
+				Entry E = (Entry) e;
+				if (E.getKey() != k && !E.getKey().equals(k))
+					this.put(E);
+			}
+
 	}
 
-	public void delete(int at) {
+	/*public void delete(int at) {
 		this.remove(at);
 	}
 
 	public void delete(K k) {
 		this.removeKey(k);
-	}
+	}*/
 
 	public boolean contains(K key, Object val) {
-		for (int i = 0; i < this.keys.size(); i++) {
-			if (this.keys.get(i) == key && this.values.get(i) == val)
-				return true;
+		boolean k = false;
+		boolean v = false;
+
+		for(Entry<K,V> E : this.getEntries())
+		{
+			if(E.getKey()==key||E.getKey().equals(key))
+				k=true;
+			if(E.getValue()==val || E.getValue().equals(val))
+				v=true;
+				
 		}
-		return false;
+		
+		return k && v;
 	}
 
 	@Override
@@ -181,9 +233,12 @@ public abstract class _Map<K, V> implements iMap<K, V> {
 	@Override
 	public Iterator<Entry<K, V>> iterator() {
 		aSet entries = new aSet<Entry<K, V>>();
+		iCollection v;
 		for (int i = 0; i < this.keys.size(); i++) {
+			v = this.getAll(this.keys.get(i));
 			entries.append(new Entry<K, V>(this.keys.get(i), this.values.get(i)));
 		}
+
 		// return this.keys.iterator();
 		return entries.iterator();
 	}
@@ -203,9 +258,16 @@ public abstract class _Map<K, V> implements iMap<K, V> {
 		// String s = this.getClass().getSimpleName() + "{" + this.getSize() + "}\n";
 		String s = "";
 		s += "{";
+		/*
+		 * if (this.keys != null && !this.keys.isEmpty()) for (int i = 0; i <
+		 * this.keys.size(); i++) { s += "[" + this.keys.get(i) + "|" +
+		 * this.getAll(this.keys.get(i)) + "]"; if (i != this.keys.size() - 1) s += ",";
+		 * }
+		 */
 		if (this.keys != null && !this.keys.isEmpty())
-			for (int i = 0; i < this.keys.size(); i++) {
-				s += "[" + this.keys.get(i) + "|" + this.values.get(i) + "]";
+			for (K k : this.keys) {
+				int i = this.keys.indexOf(k);
+				s += "[" + k + "|" + this.getAll(k) + "]";
 				if (i != this.keys.size() - 1)
 					s += ",";
 			}
@@ -257,9 +319,15 @@ public abstract class _Map<K, V> implements iMap<K, V> {
 			return this;
 		};
 
+		protected Entry() {
+			this.key = null;
+			this.value = null;
+		}
+
 		public Entry(K key, V val) {
-			this.key = key;
+			this.key = key;			
 			this.value = val;
+			this.label = (this.key + "|" + this.value);
 		}
 
 		public K getKey() {
@@ -276,7 +344,8 @@ public abstract class _Map<K, V> implements iMap<K, V> {
 
 		@Override
 		public String toString() {
-			String s = "[ " + /* toIdString */(this.key) + "|" + this.value + " ]";
+			this.label = (this.key + "|" + this.value);
+			String s = "["+this.label+"]";
 			return s;
 		}
 
@@ -348,6 +417,9 @@ public abstract class _Map<K, V> implements iMap<K, V> {
 	@Override
 	public iGroup with(iGroup other) {
 
+		if(other.isEmpty())
+			return this;
+		
 		for (Object o : other) {
 			if (o instanceof Entry)
 				this.put((Entry) o);
@@ -358,12 +430,12 @@ public abstract class _Map<K, V> implements iMap<K, V> {
 	}
 
 	public _Map<K, V> newEmpty() {
+		if (this instanceof aMultiMap)
+			return new aMultiMap<K, V>();
 		if (this instanceof aMap)
 			return new aMap<K, V>();
-		if (this instanceof aSetMap)
-			return new aSetMap<K, V>();
 
-		return new aSetMap<K, V>();
+		return new aMap<K, V>();
 	}
 
 	public _Map<K, V> cpy() {
@@ -382,5 +454,38 @@ public abstract class _Map<K, V> implements iMap<K, V> {
 			out[i] = (Entry<K, V>) O[i];
 		return out;
 	}
+
+	/////////////////////
+	public static Properties pathProperties(String path) {
+		// FileReader fr = new FileReader("src/main/resources/jdbcLOCAL.properties");
+		Properties props = new Properties();
+		String P = path += ".properties";
+		try {
+			FileReader fr = new FileReader(path);
+			props.load(fr);
+		} catch (IOException e) {
+
+			e.printStackTrace();
+		}
+		return props;
+	}
+
+	public static _Map<String, Object> mapProperties(Properties props) {
+		aMap<String, Object> res = new aMap<String, Object>();
+		for (Object o : props.keySet()) {
+			res.put("" + o, props.get(o));
+		}
+		return res;
+	}
+
+	public static Properties toProps(_Map<String, Object> M) {
+		Properties props = new Properties();
+		for (_Map.Entry E : M)
+			props.put(E.getKey(), E.getValue());
+		return props;
+
+	}
+	
+	
 
 }

@@ -10,7 +10,7 @@ import com.uchump.prime.Core.Math.N_Operator;
 import com.uchump.prime.Core.Math.Primitive.aVector;
 import com.uchump.prime.Core.Primitive.aValue;
 import com.uchump.prime.Core.Primitive.A_I.iCollection;
-import com.uchump.prime.Core.Primitive.Struct.aMap;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 
 
 public class aVectorUtils {
@@ -34,11 +34,11 @@ public class aVectorUtils {
 		return n;
 	}
 
-	public static <T> aMap<aVector<Integer>, T> map(iCollection<T>... toMap) {
+	public static <T> aMultiMap<aVector<Integer>, T> map(iCollection<T>... toMap) {
 		aVector<Integer> dim = addressIndex(toMap);
 		aVector<Integer>[] Dim = fillPermutations(dim);
 
-		aMap<aVector<Integer>, T> res = new aMap<aVector<Integer>, T>();
+		aMultiMap<aVector<Integer>, T> res = new aMultiMap<aVector<Integer>, T>();
 
 		for (int i = 0; i < dim.size(); i++) {
 			for (int j = 0; j < toMap[i].size(); j++) {
@@ -50,15 +50,15 @@ public class aVectorUtils {
 		return res;
 	}
 
-	public static <T> aMap<aVector<Integer>, T> Map(aVector offset, iCollection<T>... toMap) {
+	public static <T> aMultiMap<aVector<Integer>, T> Map(aVector offset, iCollection<T>... toMap) {
 
-		aMap<aVector<Integer>, T> res = new aMap<aVector<Integer>, T>();
+		aMultiMap<aVector<Integer>, T> res = new aMultiMap<aVector<Integer>, T>();
 
 		return res;
 	}
 
 	public static <T> T elementAt(aVector<Integer> address, iCollection<T>... toMap) {
-		aMap<aVector<Integer>, T> map = map(toMap);
+		aMultiMap<aVector<Integer>, T> map = map(toMap);
 		if (map.containsKey(address))
 			return map.get(address);
 		else

@@ -1,7 +1,7 @@
 package com.uchump.prime.Core.Primitive.A_I;
 
-import com.uchump.prime.Core.Primitive.Struct.aMap;
-import com.uchump.prime.Core.Utils._SQL.Type;
+import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
+import com.uchump.prime.Metatron.Util.X_SQL.Type;
 
 public interface iEnum<T> extends iConstructor<T>, iCollection<T> {
 
@@ -66,8 +66,8 @@ public interface iEnum<T> extends iConstructor<T>, iCollection<T> {
 
 	}
 
-	public default aMap<Type, String> getTags() {
-		return new aMap<Type, String>();
+	public default aMultiMap<Type, String> getTags() {
+		return new aMultiMap<Type, String>();
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public interface iEnum<T> extends iConstructor<T>, iCollection<T> {
 	}
 
 	public static abstract class _ALL {
-		public static aMap<String, iEnum> ENUMS;
+		public static aMultiMap<String, iEnum> ENUMS;
 
 		public static void dispose() {
 			if (ENUMS != null) {

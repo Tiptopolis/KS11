@@ -1,19 +1,25 @@
 package com.uchump.prime.Core.Primitive.A_I;
 
+import static com.uchump.prime.Core.uAppUtils.*;
+
+
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
+import com.uchump.prime.Core.Primitive.iFunctor;
 import com.uchump.prime.Core.Primitive.Struct._Array;
 import com.uchump.prime.Core.Primitive.Struct.aLinkedList;
 import com.uchump.prime.Core.Primitive.Struct.aLinkedSet;
 import com.uchump.prime.Core.Primitive.Struct.aList;
 import com.uchump.prime.Core.Primitive.Struct.aSet;
-import com.uchump.prime.Core.Utils._Collections;
+import com.uchump.prime.Metatron.Util._Collections;
 
 public interface iCollection<T> extends iIndex<T> {
 
@@ -108,19 +114,55 @@ public interface iCollection<T> extends iIndex<T> {
 		return 0;
 	}
 
+
 	public default void forEach(Consumer<? super T> action) {
 		Objects.requireNonNull(action);
 		final int expectedModCount = modCount();
 		final Object[] es = getComponentData();
 		final int size = this.size();
+		
+		//Log(modCount() + " %% " + expectedModCount);
+		
 		for (int i = 0; modCount() == expectedModCount && i < size; i++)
-			action.accept(elementAt(es, i));
+			action.accept(elementAt(es, i));		
+		//Log(modCount() + " %% " + expectedModCount);
 		if (modCount() != expectedModCount)
 			throw new ConcurrentModificationException();
 	}
-
-
 	
+
+	public default void toEach(Function<Object,T> action)
+	{
+		//this.forEach((a)->(this.setAt(Height, a)));
+		int s = this.size();
+		for(int i =0; i < s; i++)
+		{
+			T I = this.get(i);
+			this.setAt(i, action.apply(I));
+		}
+	}
+	
+	public default void toEach(iFunctor.Function<Object,T> action, T arg)
+	{
+		//this.forEach((a)->(this.setAt(Height, a)));
+		int s = this.size();
+		for(int i =0; i < s; i++)
+		{
+			T I = this.get(i);
+			this.setAt(i, action.apply(I,arg));
+		}
+	}
+	
+	public default void toEach(BiFunction<Object,Object,T> action, T arg)
+	{
+		//this.forEach((a)->(this.setAt(Height, a)));
+		int s = this.size();
+		for(int i =0; i < s; i++)
+		{
+			T I = this.get(i);
+			this.setAt(i, action.apply(I,arg));
+		}
+	}
 
 	public default aList<T> toList() {
 		aList<T> l = new aList<T>();
@@ -170,7 +212,7 @@ public interface iCollection<T> extends iIndex<T> {
 	static void ___OPERATIONS___() {
 
 	}
-	
+
 	// these should be Consumers lol
 	public default iCollection<T> newEmpty() {
 		if (this instanceof aList)
@@ -185,6 +227,18 @@ public interface iCollection<T> extends iIndex<T> {
 		return new _Array<T>();
 	}
 
+	public static <X> iCollection<X> newEmpty(Class<iCollection> C) {
+		if (C.equals(aList.class))
+			return new aList<X>();
+		if (C.equals(aSet.class))
+			return new aSet<X>();
+		if (C.equals(aLinkedList.class))
+			return new aLinkedList<X>();
+		if (C.equals(aLinkedSet.class))
+			return new aLinkedSet<X>();
+
+		return new _Array<X>();
+	}
 
 	// pos = up, neg = down, wraps
 	public default iCollection<T> shiftBy(int offset) {
@@ -209,18 +263,17 @@ public interface iCollection<T> extends iIndex<T> {
 
 	//////
 	// add //^a+b //Merger of two objects into one
-	
+
 	public default iCollection<T> add(iCollection objects) {
 		return this.union(objects);
 	}
 
-	
 	public default iCollection<T> add(T... objects) {
 		_Array<T> o = new _Array<T>(objects);
 
 		return this.add(o);
 	}
-	
+
 	@Override
 	public default iGroup join(iGroup other) {
 		return this.add((iCollection) other);
@@ -336,6 +389,40 @@ public interface iCollection<T> extends iIndex<T> {
 		return (C) c;
 	}
 
+	public default <C extends iCollection<T>> C where(Function<Object, Boolean>... F) {
+		// generates a new collection based on predicate
+
+		iCollection<T> c = this.newEmpty();
+
+		for (Function f : F)
+			c = this.where(f);
+
+		return (C) c;
+	}
+	
+
+
+	public default <C extends iCollection<T>> C where(Function<Object, Boolean> F) {
+		// generates a new collection based on predicate
+		iCollection<T> c = this.newEmpty();
+
+		for (T e : this)
+			if (F.apply(c))
+				c.append(e);
+
+		return (C) c;
+	}
+
+	public default iCollection filter(Function...F)
+	{
+		iCollection<T> c = this.where(F);
+		this.clear();
+		this.appendAll(c.toArray());
+		return this;
+	}
+	
+
+	
 	public default iCollection filter(Predicate... P) {
 		// prunes the calling collection
 		iCollection<T> c = this.where(P);
@@ -343,14 +430,14 @@ public interface iCollection<T> extends iIndex<T> {
 		this.appendAll(c.toArray());
 		return this;
 	}
-
 	
-	public static<X> iCollection<X> Consolidate(iCollection<X>...C)
-	{
+
+
+	public static <X> iCollection<X> Consolidate(iCollection<X>... C) {
 		_Array<X> res = new _Array<X>();
-		for(iCollection c : C)
+		for (iCollection c : C)
 			res.appendAll(c);
 		return res;
 	}
-	
+
 }

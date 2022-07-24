@@ -16,6 +16,7 @@ public class _Array<T> implements iCollection<T> {
 
 	protected T[] data;
 	protected int modCount = 0;
+	protected Class type = Object.class;
 
 	public Supplier<Boolean> isTrivial = () -> {
 		return this.size() == 1;
@@ -41,7 +42,16 @@ public class _Array<T> implements iCollection<T> {
 		return this.modCount;
 	}
 
-
+	@Override
+	public  Class<T> getComponentType() {
+		Class C = this.type;
+		for(T o : this)		
+			if(instanceOf(C).test(o))
+				C = o.getClass();
+		
+		this.type = C;
+		return this.type;
+	}
 	
 	@Override
 	public iGroup join(iGroup other) {
@@ -111,10 +121,11 @@ public class _Array<T> implements iCollection<T> {
 	//@-15#10->5
 	@Override
 	public void setAt(int at, T to) {
+		
 		if(at<0)
 			at = (Math.abs(this.size()-at))%this.size();
 		if (at < this.size()) {
-			this.modCount++;
+			//this.modCount++;
 			this.data[at] = to;
 		} else
 			this.append(to);
@@ -224,6 +235,12 @@ public class _Array<T> implements iCollection<T> {
 	public Iterator<T> iterator() {
 		return new ArrayIterator<T>(this);
 	}
+	
+	@Override
+	public Integer getIndexType() {
+		
+		return 0;
+	}
 
 	@Override
 	public T[] toArray() {
@@ -309,13 +326,19 @@ public class _Array<T> implements iCollection<T> {
 	}
 
 	@Override
-	public aSetMap<Integer, T> toMap() {
-		aSetMap<Integer, T> M = new aSetMap<Integer, T>();
+	public aMap<Integer, T> toMap() {
+		aMap<Integer, T> M = new aMap<Integer, T>();
 		for(int i =0; i < this.size();i++)
 			M.put(i,data[i]);
 		return M;
 	}
 
-
+	
+	public aMultiMap<Integer, T> toMultiMap() {
+		aMultiMap<Integer, T> M = new aMultiMap<Integer, T>();
+		for(int i =0; i < this.size();i++)
+			M.put(i,data[i]);
+		return M;
+	}
 
 }
