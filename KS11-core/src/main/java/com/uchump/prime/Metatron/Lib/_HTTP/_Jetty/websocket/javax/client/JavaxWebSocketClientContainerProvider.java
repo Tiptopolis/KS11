@@ -1,0 +1,58 @@
+package com.uchump.prime.Metatron.Lib._HTTP._Jetty.websocket.javax.client;
+
+
+import javax.websocket.ContainerProvider;
+import javax.websocket.WebSocketContainer;
+
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.client.HttpClient;
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.util.component.LifeCycle;
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.websocket.javax.client.internal.JavaxWebSocketClientContainer;
+
+/**
+ * Client {@link ContainerProvider} implementation.
+ * <p>
+ * Created by a {@link java.util.ServiceLoader} call in the
+ * {@link javax.websocket.ContainerProvider#getWebSocketContainer()} call.
+ * </p>
+ */
+public class JavaxWebSocketClientContainerProvider extends ContainerProvider
+{
+    public static void stop(WebSocketContainer container) throws Exception
+    {
+        if (container instanceof LifeCycle)
+        {
+            ((LifeCycle)container).stop();
+        }
+    }
+
+    /**
+     * Used by {@link ContainerProvider#getWebSocketContainer()} to get a <b>NEW INSTANCE</b>
+     * of the Client {@link WebSocketContainer}.
+     * <p>
+     * <em>NOTE: A WebSocket Client Container is a heavyweight object.</em>
+     * It is dangerous to repeatedly request a new container, or to manage many containers.
+     * The existing javax.websocket API has no lifecycle for a ClientContainer, once started
+     * they exist for the duration of the JVM with no ability to stop them.
+     * See/Comment on <a href="https://github.com/javaee/websocket-spec/issues/212">javax.websocket Issue #212</a>
+     * if this is a big concern for you.
+     * </p>
+     */
+    @Override
+    protected WebSocketContainer getContainer()
+    {
+        return getContainer(null);
+    }
+
+    /**
+     * Get a new instance of a client {@link WebSocketContainer} which uses a supplied {@link HttpClient}.
+     * @param httpClient a pre-configured {@link HttpClient} to be used by the implementation.
+     * @see #getContainer()
+     */
+    public static WebSocketContainer getContainer(HttpClient httpClient)
+    {
+        JavaxWebSocketClientContainer clientContainer = new JavaxWebSocketClientContainer(httpClient);
+        // See: https://github.com/eclipse-ee4j/websocket-api/issues/212
+        LifeCycle.start(clientContainer);
+        return clientContainer;
+    }
+}

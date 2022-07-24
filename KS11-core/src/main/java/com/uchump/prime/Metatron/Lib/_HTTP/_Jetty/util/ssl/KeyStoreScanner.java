@@ -1,0 +1,152 @@
+package com.uchump.prime.Metatron.Lib._HTTP._Jetty.util.ssl;
+
+
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.util.Callback;
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.util.Scanner;
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.util.annotation.ManagedAttribute;
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.util.annotation.ManagedOperation;
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.util.component.ContainerLifeCycle;
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.util.resource.Resource;
+
+/**
+ * <p>The {@link KeyStoreScanner} is used to monitor the KeyStore file used by the {@link SslContextFactory}.
+ * It will reload the {@link SslContextFactory} if it detects that the KeyStore file has been modified.</p>
+ * <p>If the TrustStore file needs to be changed, then this should be done before touching the KeyStore file,
+ * the {@link SslContextFactory#reload(Consumer)} will only occur after the KeyStore file has been modified.</p>
+ */
+public class KeyStoreScanner extends ContainerLifeCycle implements Scanner.DiscreteListener
+{
+    private static final Logger LOG = LoggerFactory.getLogger(KeyStoreScanner.class);
+
+    private final SslContextFactory sslContextFactory;
+    private final File keystoreFile;
+    private final Scanner _scanner;
+
+    public KeyStoreScanner(SslContextFactory sslContextFactory)
+    {
+        this.sslContextFactory = sslContextFactory;
+        try
+        {
+            Resource keystoreResource = sslContextFactory.getKeyStoreResource();
+            File monitoredFile = keystoreResource.getFile();
+            if (monitoredFile == null || !monitoredFile.exists())
+                throw new IllegalArgumentException("keystore file does not exist");
+            if (monitoredFile.isDirectory())
+                throw new IllegalArgumentException("expected keystore file not directory");
+
+            if (keystoreResource.getAlias() != null)
+            {
+                // this resource has an alias, use the alias, as that's what's returned in the Scanner
+                monitoredFile = new File(keystoreResource.getAlias());
+            }
+
+            keystoreFile = monitoredFile;
+            if (LOG.isDebugEnabled())
+                LOG.debug("Monitored Keystore File: {}", monitoredFile);
+        }
+        catch (IOException e)
+        {
+            throw new IllegalArgumentException("could not obtain keystore file", e);
+        }
+
+        File parentFile = keystoreFile.getParentFile();
+        if (!parentFile.exists() || !parentFile.isDirectory())
+            throw new IllegalArgumentException("error obtaining keystore dir");
+
+        _scanner = new Scanner();
+        _scanner.addDirectory(parentFile.toPath());
+        _scanner.setScanInterval(1);
+        _scanner.setReportDirs(false);
+        _scanner.setReportExistingFilesOnStartup(false);
+        _scanner.setScanDepth(1);
+        _scanner.addListener(this);
+        addBean(_scanner);
+    }
+
+    @Override
+    public void fileAdded(String filename)
+    {
+        if (LOG.isDebugEnabled())
+            LOG.debug("added {}", filename);
+
+        if (keystoreFile.toPath().toString().equals(filename))
+            reload();
+    }
+
+    @Override
+    public void fileChanged(String filename)
+    {
+        if (LOG.isDebugEnabled())
+            LOG.debug("changed {}", filename);
+
+        if (keystoreFile.toPath().toString().equals(filename))
+            reload();
+    }
+
+    @Override
+    public void fileRemoved(String filename)
+    {
+        if (LOG.isDebugEnabled())
+            LOG.debug("removed {}", filename);
+
+        if (keystoreFile.toPath().toString().equals(filename))
+            reload();
+    }
+
+    @ManagedOperation(value = "Scan for changes in the SSL Keystore", impact = "ACTION")
+    public boolean scan(long waitMillis)
+    {
+        if (LOG.isDebugEnabled())
+            LOG.debug("scanning");
+
+        CompletableFuture<Boolean> cf = new CompletableFuture<>();
+        try
+        {
+            // Perform 2 scans to be sure that the scan is stable.
+            _scanner.scan(Callback.from(() ->
+                _scanner.scan(Callback.from(() -> cf.complete(true), cf::completeExceptionally)), cf::completeExceptionally));
+            return cf.get(waitMillis, TimeUnit.MILLISECONDS);
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @ManagedOperation(value = "Reload the SSL Keystore", impact = "ACTION")
+    public void reload()
+    {
+        if (LOG.isDebugEnabled())
+            LOG.debug("reloading keystore file {}", keystoreFile);
+
+        try
+        {
+            sslContextFactory.reload(scf ->
+            {
+            });
+        }
+        catch (Throwable t)
+        {
+            LOG.warn("Keystore Reload Failed", t);
+        }
+    }
+
+    @ManagedAttribute("scanning interval to detect changes which need reloaded")
+    public int getScanInterval()
+    {
+        return _scanner.getScanInterval();
+    }
+
+    public void setScanInterval(int scanInterval)
+    {
+        _scanner.setScanInterval(scanInterval);
+    }
+}

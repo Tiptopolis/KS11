@@ -1,0 +1,27 @@
+package com.uchump.prime.Metatron.Lib._HTTP._Jetty.websocket.core.common.exception;
+
+import com.uchump.prime.Metatron.Lib._HTTP._Jetty.websocket.core.common.CloseStatus;
+
+/**
+ * Exception when a message is too large for the internal buffers occurs and should trigger a connection close.
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc6455#section-7.4.1">RFC6455 : Section 7.4.1</a>
+ */
+@SuppressWarnings("serial")
+public class MessageTooLargeException extends CloseException
+{
+    public MessageTooLargeException(String message)
+    {
+        super(CloseStatus.MESSAGE_TOO_LARGE, message);
+    }
+
+    public MessageTooLargeException(String message, Throwable t)
+    {
+        super(CloseStatus.MESSAGE_TOO_LARGE, message, t);
+    }
+
+    public MessageTooLargeException(Throwable t)
+    {
+        super(CloseStatus.MESSAGE_TOO_LARGE, t);
+    }
+}
