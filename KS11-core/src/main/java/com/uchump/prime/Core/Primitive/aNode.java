@@ -21,7 +21,7 @@ import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 import com.uchump.prime.Core.Primitive.Struct.aMap;
 import com.uchump.prime.Core.Primitive.Struct._Map;
 import com.uchump.prime.Core.Primitive.Struct.aSet;
-import com.uchump.prime.Core.Primitive.Struct.bDictionary;
+import com.uchump.prime.Core.Primitive.Struct.aDictionary;
 
 public class aNode<T> extends aToken<T> implements iNode<T> {
 
@@ -33,13 +33,13 @@ public class aNode<T> extends aToken<T> implements iNode<T> {
 	public String label;
 
 	// dictionary & links
-	public aMap<String, bDictionary> data; // Data, Inner, Outter
+	public aMap<String, aDictionary> data; // Data, Inner, Outter
 
 	public aMap<String, Object> shared;
 	public aMultiMap<_Map.Entry<String, Object>, Object> meta;
 	public aMap<_Map.Entry<String, Object>, iFunctor> fields;
 
-	protected bDictionary<aLink> links;
+	protected aDictionary<aLink> links;
 
 	//////
 	public Supplier<Object> Get = () -> {
@@ -58,15 +58,17 @@ public class aNode<T> extends aToken<T> implements iNode<T> {
 	public aNode() {
 		this.value = (T) Void.class;
 		this.shared = new aMap<String, Object>();
-		this.data = new aMap<String, bDictionary>();
+		this.data = new aMap<String, aDictionary>();
 		this.type = value.getClass();
 	}
 
 	public aNode(T value) {
 		this.value = value;
 		this.shared = new aMap<String, Object>();
-		this.data = new aMap<String, bDictionary>();
+		this.data = new aMap<String, aDictionary>();
 		this.type = value.getClass();
+		if(value instanceof String)
+			this.label = ""+value;
 	}
 
 	public aNode(String label, T value) {
@@ -112,7 +114,7 @@ public class aNode<T> extends aToken<T> implements iNode<T> {
 		return this.shared.get(name);
 	}
 
-	public bDictionary getData(String name) {
+	public aDictionary getData(String name) {
 		return this.data.get(name);
 	}
 
@@ -184,7 +186,7 @@ public class aNode<T> extends aToken<T> implements iNode<T> {
 			if (StringUtils.isFormOf(E.getKey(), what))
 				return true;
 		}
-		for (Entry<String, bDictionary> E : this.data)
+		for (Entry<String, aDictionary> E : this.data)
 			if (StringUtils.isFormOf(E.getKey(), what))
 				return true;
 
@@ -224,7 +226,7 @@ public class aNode<T> extends aToken<T> implements iNode<T> {
 				}
 		}
 
-		for (Entry<String, bDictionary> E : this.data)
+		for (Entry<String, aDictionary> E : this.data)
 			if (StringUtils.isFormOf(E.getKey(), what))
 				return true;
 
@@ -298,6 +300,11 @@ public class aNode<T> extends aToken<T> implements iNode<T> {
 
 	}
 
+	public aLink link(String as, aNode target)
+	{
+		return this.link("",as,target);
+	}
+	
 	// [source->target]
 	public aLink link(Object context, String as, aNode target) {
 		return this.link(context, as, target, 0);
@@ -312,7 +319,7 @@ public class aNode<T> extends aToken<T> implements iNode<T> {
 	public aLink link(Object context, String as, aNode target, Number phase) {
 
 		if (this.links == null)
-			this.links = new bDictionary<aLink>();
+			this.links = new aDictionary<aLink>();
 
 		aLink L = null;
 		Entry<Object, String> E = null;
@@ -342,7 +349,7 @@ public class aNode<T> extends aToken<T> implements iNode<T> {
 
 	public aLink link(aLink link) {
 		if (this.links == null)
-			this.links = new bDictionary<aLink>();
+			this.links = new aDictionary<aLink>();
 
 		this.links.put(new Entry(this, link.label), link);
 		return link;
@@ -468,7 +475,7 @@ public class aNode<T> extends aToken<T> implements iNode<T> {
 		 */
 
 		if (this.links == null)
-			this.links = new bDictionary<aLink>();
+			this.links = new aDictionary<aLink>();
 
 		Object L = this.links.get(context, label);
 

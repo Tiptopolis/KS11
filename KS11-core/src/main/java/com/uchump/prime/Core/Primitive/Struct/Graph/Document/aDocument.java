@@ -1,5 +1,7 @@
 package com.uchump.prime.Core.Primitive.Struct.Graph.Document;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -7,7 +9,7 @@ import java.util.function.Supplier;
 import com.uchump.prime.Core.Primitive.aNode;
 import com.uchump.prime.Core.Primitive.Struct.Graph.aBranch;
 
-public class aDocument extends aBranch{
+public class aDocument extends aBranch implements Closeable{
 
 	
 	 protected static final String[] NODE_TYPE_NAMES = {"Node", "Element",
@@ -36,5 +38,11 @@ public class aDocument extends aBranch{
 		N.shared.put("hasParent", hasParent);*/
 		
 		return N;
+	}
+
+	@Override
+	public void close() throws IOException {
+		// TODO Auto-generated method stub
+		
 	}
 }

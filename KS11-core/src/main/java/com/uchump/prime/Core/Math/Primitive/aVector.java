@@ -19,6 +19,7 @@ import com.uchump.prime.Core.Math.V_Operator;
 import com.uchump.prime.Core.Math.Utils.Maths;
 import com.uchump.prime.Core.Math.Utils.aGeom;
 import com.uchump.prime.Core.Math.Utils.aMaths;
+import com.uchump.prime.Core.Math.Utils.aVectorUtils;
 import com.uchump.prime.Core.Primitive.A_I.iCollection;
 import com.uchump.prime.Core.Primitive.A_I.iGroup;
 import com.uchump.prime.Core.Primitive.A_I.iMap;
@@ -282,6 +283,13 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 			out.append(this.get(i));
 		return out;
 	}
+	
+	@Override
+	public aVector sort()
+	{
+		aVectorUtils.sortMagnitudeAscending(this);
+		return this;
+	}
 
 	public int lMag() {
 		int c = 0;
@@ -339,6 +347,14 @@ public class aVector<N extends Number> extends aNumber implements Iterable<Numbe
 		return "(" + this.toElementString() + ")";
 	}
 
+	public String toJoinedString()
+	{
+		String s = "";
+		for(Number n : this)
+			s+=n;
+		return s;
+	}
+	
 	@Override
 	public String toString() {
 		String s = "V" + this.size() + StringUtils.numberFormat(this.value) + this.toValueString();

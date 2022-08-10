@@ -7,49 +7,78 @@ import com.uchump.prime.Core.Primitive.A_I.iCollection;
 import com.uchump.prime.Core.Primitive.A_I.iGroup;
 import com.uchump.prime.Core.Primitive.Struct._Map;
 import com.uchump.prime.Core.Primitive.Struct.aMap;
+import com.uchump.prime.Core.Primitive.Struct.aSet;
 
 public interface iFunctor<T> {
 
-	default <O, I> O apply(I... args) {
+	public default <O, I> O apply(I... args) {
 		return this.get();
 	}
 
-	default <S> S get() {
+	public default <S> S get() {
 		return null;
 	};
 
-	default void apply() {
+	public default void apply() {
 
 	}
 
-	default <T> void accept(T args) {
+	public default <X> void accept(T args) {
 
 	}
 
-	default <T> void accept(T... args) {
+	public default <X> void accept(T... args) {
 
+	}
+
+	public default String fName() {
+		return "Functor";
 	}
 
 	@FunctionalInterface
 	public static interface Action extends iFunctor<Object> {
 		public void execute();
+
+		@Override
+		public default void apply() {
+			this.execute();
+		}
+
+		public default String fName() {
+			return "Action";
+		}
 	}
-	
+
+	// meh
 	@FunctionalInterface
-	public static interface DoTo<T> extends iFunctor<Object>{
-		public T execute(iCollection<T> ents, Function<Object,T> fn);
+	public static interface DoTo<T> extends iFunctor<Object> {
+		public T execute(iCollection<T> ents, Function<Object, T> fn);
+
 	}
 
 	@FunctionalInterface
 	public static interface Supplier<T> extends iFunctor<T>, java.util.function.Supplier<T> {
 		@Override
 		public T get();
+
+		@Override
+		public default T apply(Object... args) {
+			return this.get();
+		}
+
+		public default String fName() {
+			return "Supplier";
+		}
 	}
 
 	@FunctionalInterface
 	public static interface Consumer<T> extends iFunctor<T>, java.util.function.Consumer<T> {
 		@Override
 		void accept(Object t);
+
+		public default String fName() {
+			return "Consumer";
+		}
 	}
 
 	@FunctionalInterface
@@ -64,6 +93,10 @@ public interface iFunctor<T> {
 
 			return (T) t;
 		}
+
+		public default String fName() {
+			return "Effect";
+		}
 	}
 
 	@FunctionalInterface
@@ -76,11 +109,27 @@ public interface iFunctor<T> {
 		@Override
 		public O apply(Object... t);
 
+		@Override
+		public default void apply() {
+			this.apply(this);
+		}
+
+		public default String fName()
+		{
+			return "Function";
+		}
+		
 	}
 
 	public static interface Operator<I, O> extends iFunctor<O>, java.util.function.BiFunction<I, I, O> {
 		@Override
 		public O apply(I t, I u);
+		
+		
+		public default String fName()
+		{
+			return "Operator";
+		}
 	}
 
 	// from SPARK
@@ -104,44 +153,38 @@ public interface iFunctor<T> {
 	public interface RouteGroup {
 		void addRoutes();
 	}
-	
-	
-	/*public static interface Case<T>{ //extends Function<Predicate<T>,T>{
-		//single predicate
-		//predicate, output
-		
-			// if(CASE[A].contains(o))
-		
-		
-		
-		private default boolean contains(Object o)
-		{
-			return false;
-		}
-	}*/
-	
+
+	/*
+	 * public static interface Case<T>{ //extends Function<Predicate<T>,T>{ //single
+	 * predicate //predicate, output
+	 * 
+	 * // if(CASE[A].contains(o))
+	 * 
+	 * 
+	 * 
+	 * private default boolean contains(Object o) { return false; } }
+	 */
+
 	@FunctionalInterface
-	public static interface Constructor<T> extends iFunctor<T>{
-		
+	public static interface Constructor<T> extends iFunctor<T> {
+
 		public T getNew(iFunctor<T> fn);
-		
-		public default T getNew(aMap<String,Object> params, iFunctor<T> fn)
-		{
+
+		public default T getNew(aMap<String, Object> params, iFunctor<T> fn) {
 			return null;
 		}
 	}
-	
-	
-	
-	public static class aExpression extends _Map.Entry<String, Function>
-	{
-		public aExpression(String label, Function f)
-		{
-			super(label,f);
+
+	public static class aExpression extends _Map.Entry<String, iFunctor> {
+		public aExpression(String label, iFunctor f) {
+			super(label, f);
 		}
-		
-		public Object evaluate(Object...o)
-		{
+
+		public void evaluate() {
+			this.value.apply();
+		}
+
+		public Object evaluate(Object... o) {
 			return this.value.apply(o);
 		}
 	}

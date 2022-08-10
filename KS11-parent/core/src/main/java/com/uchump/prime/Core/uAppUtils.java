@@ -121,6 +121,10 @@ public class uAppUtils {
 		System.out.println(s);
 	}
 
+	public static void Log(iFunctor f) {
+		Log(f.fName());
+	}
+
 	public static void Log(Object s) {
 		if (s != null)
 			System.out.println(s.toString());
@@ -172,6 +176,14 @@ public class uAppUtils {
 		else
 			Log("null");
 	}
+
+	public static String LogBack(Object o) {
+		Log(o);
+		return "" + o;
+	}
+	
+	
+
 
 	public static void Page() {
 		String out = "";

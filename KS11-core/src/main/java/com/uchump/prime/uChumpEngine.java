@@ -36,11 +36,13 @@ import com.uchump.prime.Core.Math.Primitive.A_I._Evaluate;
 import com.uchump.prime.Core.Math.Utils.Maths;
 import com.uchump.prime.Core.Math.Utils.aGeom;
 import com.uchump.prime.Core.Math.Utils.aMaths;
+import com.uchump.prime.Core.Math.Utils.aVectorUtils;
 import com.uchump.prime.Core.Primitive.aGroup;
 import com.uchump.prime.Core.Primitive.aNode;
 import com.uchump.prime.Core.Primitive.aToken;
 import com.uchump.prime.Core.Primitive.aValue;
 import com.uchump.prime.Core.Primitive.iFunctor;
+import com.uchump.prime.Core.Primitive.iFunctor.aExpression;
 import com.uchump.prime.Core.Primitive.A_I.iCollection;
 import com.uchump.prime.Core.Primitive.A_I.iEnum;
 import com.uchump.prime.Core.Primitive.Struct._Map;
@@ -50,9 +52,10 @@ import com.uchump.prime.Core.Primitive.Struct.aLinkedList;
 import com.uchump.prime.Core.Primitive.Struct.aList;
 import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 import com.uchump.prime.Core.Primitive.Struct.aSet;
-import com.uchump.prime.Core.Primitive.Struct.bDictionary;
+import com.uchump.prime.Core.Primitive.Struct.aDictionary;
 import com.uchump.prime.Core.Primitive.Struct.aMap;
 import com.uchump.prime.Core.Primitive.Struct.Graph.Document.aDocument;
+import com.uchump.prime.Core.Primitive.Struct.Impl.aCommandMap;
 import com.uchump.prime.Core.Primitive.Utils.aCharIndexer;
 import com.uchump.prime.Core.Primitive.Utils.aStats;
 import com.uchump.prime.Core.Primitive.Utils.aThingClassifier;
@@ -137,7 +140,11 @@ public class uChumpEngine extends ApplicationAdapter {
 		Log(Functions.getA("sin").apply(1f));
 		Log(TheMetatron.Console.data.toLog());
 		// TheMetatron.Console.exe("TERMINATE");
+
+		// t1();
 		DOM2();
+		DOM3();
+		// DOM4();
 	}
 
 	aList<String> arch;
@@ -501,14 +508,14 @@ public class uChumpEngine extends ApplicationAdapter {
 		Log(new aValue("ASS").toTag());
 		Log(aToken.TYPES.toLog());
 		Log(_SQL.TYPES.toLog());
-		Log(_SQL.TYPES.getAll("CLAUSE").toLog());
+		Log(_SQL.TYPES.getAllOf("CLAUSE")/* .toLog() */);
 		Log("-");
-		Log(_SQL.TYPES.getAll("NUMERIC").toLog());
+		Log(_SQL.TYPES.getAllOf("NUMERIC")/* .toLog() */);
 		Log("-");
-		Log(_SQL.TYPES.getAll("DATA_TYPE.NUMERIC").toLog());
-		Log(_SQL.TYPES.getAll("DATA_TYPE.NUMERIC").get(0).getClass());
-		Log(_SQL.TYPES.getAll("DATA_TYPE.NUMERIC").get(0).getKey());
-		Log(_SQL.TYPES.getAll("DATA_TYPE.NUMERIC").get(0).getValue());
+		Log(_SQL.TYPES.getAllOf("DATA_TYPE.NUMERIC")/* .toLog() */);
+		Log(_SQL.TYPES.getAllOf("DATA_TYPE.NUMERIC")/* .get(0) */.getClass());
+		Log(_SQL.TYPES.getAllOf("DATA_TYPE.NUMERIC")/* .get(0).getKey() */);
+		Log(_SQL.TYPES.getAllOf("DATA_TYPE.NUMERIC")/* .get(0).getValue() */);
 		Log();
 		Log();
 		Log();
@@ -635,7 +642,7 @@ public class uChumpEngine extends ApplicationAdapter {
 		// Log();
 		Log();
 		Log();
-		bDictionary B = new bDictionary();
+		aDictionary B = new aDictionary();
 		B.put("CLASS_A", "TYPE_A", "A:A0");
 		B.put("CLASS_A", "TYPE_A", "A:A1");
 		B.put("CLASS_A", "TYPE_A", "A:A2");
@@ -661,8 +668,77 @@ public class uChumpEngine extends ApplicationAdapter {
 		Log(B.get("TYPE_A"));
 		Log(B.get("CLASS_A", "TYPE_A"));
 		Log();
-		Log(new aLinkedList(-1,0,1,2,3,4,5,9,1,0).toLog());
-		Log(new aStats(0,0,0,1,0,10,1).toLog());
+		Log(new aLinkedList(-1, 0, 1, 2, 3, 4, 5, 9, 1, 0).toLog());
+		Log(new aStats(0, 0, 0, 1, 0, 10, 1).toLog());
+		Log(B.collect("CLASS_A").toLog());
+
+		A.clear();
+		B.clear();
+		D.clear();
+	}
+
+	public aMap<String, iFunctor> commands = new aMap<String, iFunctor>();
+	// iFunctor.Effect<Number> INC = (a) -> N_Operator.add(a, 1);
+	public iFunctor.Effect LOG = (a) -> LogBack(a);
+
+	public void DOM3() {
+
+
+		aList<aVector> Permutes_8Bit = new aList<aVector>(iCypher.fillPermutations(2, 2, 2, 2, 2, 2, 2, 2));
+		Log(iCypher.fillPermutations(2, 2, 2, 2, 2, 2, 2, 2));
+		// Log(Permutes_8Bit.toLog());
+		
+		for (aVector v : Permutes_8Bit)
+			Log(v.toJoinedString());
+		Log("\n\n\n");
+		
+		/*
+		for (aVector v : B)
+			Log(v.toJoinedString());*/
+		
+		
+		//aList<aVector> B = (aList<aVector>) aVectorUtils.sortElementsAscending(Permutes_8Bit.cpy()); //Z-patterning?		
+		//aList<aVector> B = (aList<aVector>) aVectorUtils.sortSumAscending(Permutes_8Bit.cpy());
+		
+		aList<aVector> B = (aList<aVector>) aVectorUtils.sortMagnitudeAscending(Permutes_8Bit.cpy()); //normal binary lol
+		
+		for (aVector v : B) {
+			Log(v.toJoinedString());
+			//if(Permutes_8Bit.get(B.indexOf(v))!= v)
+				//Log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+		}
+		
+		
+		iFunctor.aExpression L = new aExpression("LOG", LOG);
+		commands.put(L);
+		Log(">>>>>");
+		Log(commands.toLog());
+		commands.get("LOG").apply(new aNode("ASS").toLog());
+		Log(iCypher.rdxComp(32));
+	}
+
+	aCommandMap C = new aCommandMap();
+
+	public void DOM4() {
+		Log("!!!!!!!!!!!");
+		iFunctor.Supplier<Number> GZ = () -> 0;
+		C.put("Z", GZ);
+		C.put("LOG", LOG);
+
+		Log(C.toLog());
+
+		C.call("LOG", new aNode("ASS").toLog());
+		// Log(C.call("Z"));
+		C.callLog("Z");
+
+		aNode N1 = new aNode("N1");
+		aNode N2 = new aNode("N2");
+		N1.link("global", "Child", "Parent", N2);
+
+		Log(N1.toLog());
+		Log(N2.toLog());
+		Log(N1.has("Child"));
+		Log(N1.has("Parent"));
 	}
 
 }

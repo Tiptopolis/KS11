@@ -1,10 +1,12 @@
 package com.uchump.prime.Core.Primitive.Struct;
 
+import java.util.Collection;
+
 import com.uchump.prime.Core.Primitive.A_I.iCollection;
 import com.uchump.prime.Core.Primitive.A_I.iGroup;
 
 public class aList<T> extends _Array<T> {
-	
+
 	public aList() {
 		super();
 		this.data = (T[]) new Object[0];
@@ -12,13 +14,17 @@ public class aList<T> extends _Array<T> {
 
 	public aList(T... entries) {
 		super(entries);
-		
+
 	}
-	
+
 	public aList(iGroup entries) {
-		super(entries);		
+		super(entries);
 	}
-	
+
+	public aList(Collection<T> c) {
+		super(c);
+	}
+
 	@Override
 	public void append(T entry) {
 		super.append(entry);
@@ -30,9 +36,8 @@ public class aList<T> extends _Array<T> {
 			this.append(entries[i]);
 		}
 	}
-	
-	public aList<T> purgeDuplicates()
-	{
+
+	public aList<T> purgeDuplicates() {
 		return this.toSet().toList();
 	}
 

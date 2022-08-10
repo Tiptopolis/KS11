@@ -2,7 +2,7 @@ package com.uchump.prime.Core.Primitive.A_I;
 
 import static com.uchump.prime.Core.uAppUtils.*;
 
-
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
@@ -36,7 +36,19 @@ public interface iCollection<T> extends iIndex<T> {
 
 	@Override
 	public default iCollection with(T... members) {
-		this.appendAll(members);
+
+		// this.appendAll(members);
+		for (int i = 0; i < members.length; i++) {
+			if (members[i] instanceof iCollection) {
+				iCollection C = (iCollection) members[i];
+
+			}
+			if (members[i] instanceof Collection) {
+				aList C = new aList(members[i]);
+
+			}
+		}
+
 		return this;
 	}
 
@@ -114,53 +126,45 @@ public interface iCollection<T> extends iIndex<T> {
 		return 0;
 	}
 
-
 	public default void forEach(Consumer<? super T> action) {
 		Objects.requireNonNull(action);
 		final int expectedModCount = modCount();
 		final Object[] es = getComponentData();
 		final int size = this.size();
-		
-		//Log(modCount() + " %% " + expectedModCount);
-		
+
+		// Log(modCount() + " %% " + expectedModCount);
+
 		for (int i = 0; modCount() == expectedModCount && i < size; i++)
-			action.accept(elementAt(es, i));		
-		//Log(modCount() + " %% " + expectedModCount);
+			action.accept(elementAt(es, i));
+		// Log(modCount() + " %% " + expectedModCount);
 		if (modCount() != expectedModCount)
 			throw new ConcurrentModificationException();
 	}
-	
 
-	public default void toEach(Function<Object,T> action)
-	{
-		//this.forEach((a)->(this.setAt(Height, a)));
+	public default void toEach(Function<Object, T> action) {
+		// this.forEach((a)->(this.setAt(Height, a)));
 		int s = this.size();
-		for(int i =0; i < s; i++)
-		{
+		for (int i = 0; i < s; i++) {
 			T I = this.get(i);
 			this.setAt(i, action.apply(I));
 		}
 	}
-	
-	public default void toEach(iFunctor.Function<Object,T> action, T arg)
-	{
-		//this.forEach((a)->(this.setAt(Height, a)));
+
+	public default void toEach(iFunctor.Function<Object, T> action, T arg) {
+		// this.forEach((a)->(this.setAt(Height, a)));
 		int s = this.size();
-		for(int i =0; i < s; i++)
-		{
+		for (int i = 0; i < s; i++) {
 			T I = this.get(i);
-			this.setAt(i, action.apply(I,arg));
+			this.setAt(i, action.apply(I, arg));
 		}
 	}
-	
-	public default void toEach(BiFunction<Object,Object,T> action, T arg)
-	{
-		//this.forEach((a)->(this.setAt(Height, a)));
+
+	public default void toEach(BiFunction<Object, Object, T> action, T arg) {
+		// this.forEach((a)->(this.setAt(Height, a)));
 		int s = this.size();
-		for(int i =0; i < s; i++)
-		{
+		for (int i = 0; i < s; i++) {
 			T I = this.get(i);
-			this.setAt(i, action.apply(I,arg));
+			this.setAt(i, action.apply(I, arg));
 		}
 	}
 
@@ -399,8 +403,6 @@ public interface iCollection<T> extends iIndex<T> {
 
 		return (C) c;
 	}
-	
-
 
 	public default <C extends iCollection<T>> C where(Function<Object, Boolean> F) {
 		// generates a new collection based on predicate
@@ -413,16 +415,13 @@ public interface iCollection<T> extends iIndex<T> {
 		return (C) c;
 	}
 
-	public default iCollection filter(Function...F)
-	{
+	public default iCollection filter(Function... F) {
 		iCollection<T> c = this.where(F);
 		this.clear();
 		this.appendAll(c.toArray());
 		return this;
 	}
-	
 
-	
 	public default iCollection filter(Predicate... P) {
 		// prunes the calling collection
 		iCollection<T> c = this.where(P);
@@ -430,8 +429,6 @@ public interface iCollection<T> extends iIndex<T> {
 		this.appendAll(c.toArray());
 		return this;
 	}
-	
-
 
 	public static <X> iCollection<X> Consolidate(iCollection<X>... C) {
 		_Array<X> res = new _Array<X>();

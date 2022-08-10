@@ -4,4 +4,8 @@ import com.uchump.prime.Core.Primitive.Struct.aDictionary;
 
 public class aTable extends aDictionary<aField>{
 
+	
+	
+	//serialize to csv
+	
 }

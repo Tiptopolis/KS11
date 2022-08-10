@@ -2,6 +2,9 @@ package com.uchump.prime.Core.Utils;
 
 import static com.uchump.prime.Core.uAppUtils.*;
 
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import com.uchump.prime.Core.DefaultResources;
 import com.uchump.prime.Core.Math.N_Operator;
 import com.uchump.prime.Core.Math.Primitive.aVector;
@@ -37,6 +40,38 @@ public abstract class iCypher {
 	static String alphabetG = "1234567890ABCDEF";
 	static String alphabetH = "0123456789ABCDEF";
 	static String alphabetI = alphabetE + alphabetB;
+	
+	
+	public static String _BIN = "01"; //%2
+	public static String _DEX = "0123456789";//%10
+	public static String _HEX = "0123456789ABCDEF"; //%16
+	public static String _ZEX = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; //%26
+	public static String _REX = _DEX+_ZEX; //%36
+	
+	protected static enum NamingStrategy {
+		NAME(_ZEX), NUMERIC(_DEX),HEX(_HEX), BIN(_BIN);
+		
+		private Supplier getFirst;
+		private Function getNext;
+		
+		private String symbols;
+		
+		private NamingStrategy(String symbols)
+		{
+			
+		}
+		
+		public String resolveFirst()
+		{
+			return ""+symbols.charAt(0);
+		}
+		
+		public String getAt(int index)
+		{
+			return rdxComp(this.symbols, index);
+		}
+		
+	}
 
 	// generates an alphabet string
 	public static String NumericBaseAlphabet(int base) {
@@ -198,7 +233,7 @@ public abstract class iCypher {
 		return listCoords(dimensions);
 	}
 
-	public aVector[] fillPermutations(Number... dimensions) {
+	public static aVector[] fillPermutations(Number... dimensions) {
 		return listCoords(new aVector(dimensions));
 	}
 

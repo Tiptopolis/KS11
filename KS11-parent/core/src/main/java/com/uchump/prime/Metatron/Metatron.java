@@ -94,14 +94,14 @@ public class Metatron extends _RuntimeEnv implements GdxAdapter{
 		this.Server = null;
 		}*/
 		
-		if(Server!=null)
+		if(Server!=null) {
 			try {
 				Server.close();
 				Server = null;
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		
+		}
 		
 		Console.terminate();
 		// VTS.dispose();

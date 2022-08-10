@@ -7,7 +7,7 @@ import com.uchump.prime.Core.Math.Primitive.aVector;
 import com.uchump.prime.Core.Primitive.aNode;
 import com.uchump.prime.Core.Primitive.A_I.iGroup;
 import com.uchump.prime.Core.Primitive.A_I.iMap;
-import com.uchump.prime.Core.Primitive.A_I.iSpace;
+import com.uchump.prime.Core.Primitive.A_I.L.iSpace;
 
 public class aNamespace extends aNode<aNamespace> implements iSpace<aName>{
 

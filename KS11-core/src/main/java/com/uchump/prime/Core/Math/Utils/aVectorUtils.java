@@ -10,6 +10,7 @@ import com.uchump.prime.Core.Math.N_Operator;
 import com.uchump.prime.Core.Math.Primitive.aVector;
 import com.uchump.prime.Core.Primitive.aValue;
 import com.uchump.prime.Core.Primitive.A_I.iCollection;
+import com.uchump.prime.Core.Primitive.Struct.aList;
 import com.uchump.prime.Core.Primitive.Struct.aMultiMap;
 
 
@@ -268,6 +269,7 @@ public class aVectorUtils {
 	}
 
 
+	
 	public static Comparator<aVector> magnitudeComparator() {
 		Comparator<aVector> m = new Comparator<aVector>() {
 
@@ -318,18 +320,18 @@ public class aVectorUtils {
 				Number a2 = largestValue(o2);
 
 				if (a1.floatValue() < a2.floatValue())
-					weight++;
-				if (a1.floatValue() > a2.floatValue())
 					weight--;
+				if (a1.floatValue() > a2.floatValue())
+					weight++;
 
 				if (o1.sum().floatValue() < o2.sum().floatValue())
-					weight++;
+					weight--;
 				if (o1.sum().floatValue() > o2.sum().floatValue())
-					weight--;
-				if (o1.lMag() > o2.lMag())
 					weight++;
-				if (o1.lMag() < o2.lMag())
+				if (o1.lMag() > o2.lMag())
 					weight--;
+				if (o1.lMag() < o2.lMag())
+					weight++;
 				return weight;
 			}
 
@@ -337,6 +339,13 @@ public class aVectorUtils {
 		return m;
 	}
 
+	public static iCollection<aVector> sortMagnitudeAscending(aVector...vects)
+	{
+		aList<aVector> l = new aList<aVector>(vects);
+		return sortMagnitudeAscending(l);
+	}
+	
+	//default sort, because 0-1 mirrors binary exactly
 	public static iCollection<aVector> sortMagnitudeAscending(iCollection<aVector> vects) {
 		return vects.sort(magnitudeComparator());
 	}

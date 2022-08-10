@@ -89,6 +89,12 @@ public interface iGroup<IndexType extends Number, T> extends Iterable<T>, iConta
 		this.remove(index);
 		return get;
 	}
+	
+	public default iGroup transfer(Number index, iGroup to)
+	{
+		T t = this.take(this.resolveIndex(index));		
+		return to.with(t);
+	}
 
 	public boolean contains(T entry);
 

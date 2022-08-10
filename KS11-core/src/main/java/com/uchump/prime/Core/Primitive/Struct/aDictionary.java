@@ -2,17 +2,15 @@ package com.uchump.prime.Core.Primitive.Struct;
 
 import static com.uchump.prime.Core.uAppUtils.*;
 
-
 import com.uchump.prime.Core.Primitive.A_I.iCollection;
 import com.uchump.prime.Core.Primitive.Struct._Map.Entry;
 import com.uchump.prime.Core.Utils.StringUtils;
 
 public class aDictionary<V> extends aMultiMap<Entry<Object, String>, V> {
-
 	public void put(D_Key key, Object val) {
 		if (!this.contains(key, val)) {
 			if (this.containsKey(key))
-				key = (aDictionary<V>.D_Key) this.keys.get(this.keys.indexOf(key));
+				key = (aDictionary.D_Key) this.keys.get(this.keys.indexOf(key));
 			this.keys.append(key);
 			this.values.append((V) val);
 		}
@@ -51,61 +49,115 @@ public class aDictionary<V> extends aMultiMap<Entry<Object, String>, V> {
 		return this.getEntries().get(index);
 	}
 
-	public Object get(Object context, String as) {
-		return this.getAll(new Entry(context, as));
+	@Override
+	public V get(Entry<Object, String> key) {
+		if (this.getAll(key) != null)
+			return this.getAll(key).get(0);
+		else
+			return null;
 	}
 
-	public Object get(String get) {
-		Object[] E = this.getAllOf(get).toArray();
-		Log(get+" >>>>>>>>>>>>>>>>>> " +E.length);
-		Log(E);
-		if (E == null || E.length == 0)
-			return null;
-
-		if (E.length == 1)
-			return E[0];
+	public Object get(Object context, String as) {
+		//return this.getAll(new Entry(context, as));
 		
-		aList out = new aList();
-		for(Object o : E)
-			if(o.toString().contains(get) || o.toString().equals(get))
-				out.append(o);
+		aSet all = new aSet(this.getAll(new Entry(context, as)));
+		
+		if(all.size()==1)
+			return all.get(0);
+		else {
+			Log("!!       " + all);
+			return all;
+		}
+	}
+
+	public Object get(Object context, String... as) {
+
+		aSet ent = new aSet(this.getAllOf(context));
+		aSet out = new aSet();
+		int s = ent.size();
+		if (s == 1)
+			return ent.get(0);
+		//Log("!!       " + ent);
+		for (String S : as)
+			for (int i = 0; i < s; i++) {
+				Entry E = (Entry) ent.get(i);
+				if (StringUtils.isFormOf("" + E.getValue(), S))
+					out.append(E);
+			}
+		if (out.size() == 1)
+			return out.get(0);
+		return out;
+
+	}
+
+	public Object getAllOf(String... as) {
+		iCollection<Entry<Entry<Object, String>, V>> ent = this.getEntries();
+		aSet out = new aSet();
+		for (String S : as)
+			for (int i = 0; i < ent.size(); i++) {
+				for (String s : as) {
+					Entry E = ent.get(i);
+					Entry K = (Entry) E.getKey();
+
+					if (K.getKey() == s || K.getKey().equals(s) || s.equals(K.getKey()))
+						out.append(E);
+					if (StringUtils.isFormOf("" + K.getValue(), S))
+						out.append(E);
+				}
+			}
 		return out;
 	}
 
-	public iCollection<Entry<Entry, Object>> getAllOf(String... get) {
+	public Object getAllOf(Object context) {
 
-		aMultiMap<Entry<Object, String>, Object> S = new aMultiMap<Entry<Object, String>, Object>();
+		if (context instanceof CharSequence)
+			return this.getAllOf("" + context, "");
 
-		for (String g : get) {
-			for (Entry E : this) {
-				if (D_Key.is(E, g)) {
-					S.put(E, this.getAll(E));
-				}
-			}
+		iCollection<Entry<Entry<Object, String>, V>> ent = this.getEntries();
+
+		aList out = new aList();
+
+		for (int i = 0; i < ent.size(); i++) {
+			Entry E = ent.get(i);
+			Entry K = (Entry) E.getKey();
+
+			if (K.getKey() == context || K.getKey().equals(context) || context.equals(K.getKey()))
+				out.append(E);
 		}
 
-		aList O = new aList();
-		for (Entry E : S)
-			O.append(E.getKey());
-		return O;
+		if (out.isEmpty())
+			return null;
+		if (out.size() == 1)
+			return out.get(0);
+		return out;
+	}
+	
+	public iCollection collect(Object context)
+	{
+		aSet ent = (aSet) new aSet().with(this.getAllOf(context));;
+		
+		return ent;
+	}
+	
+	public iCollection collect(Object context, String...names)
+	{
+		aSet ent = (aSet) new aSet().with(this.get(context,names));
+		
+		return ent;
+	}
 
-	}
-	
 	@Override
-	public boolean contains(Entry<Object, String> k, Object v)
-	{
-		return super.contains(k,v);
+	public boolean contains(Entry<Object, String> k, Object v) {
+		return super.contains(k, v);
 	}
-	
-	public boolean contains(Object context, String as, V val)
-	{
+
+	public boolean contains(Object context, String as, V val) {
 		Entry<Object, String> key = new Entry<Object, String>(context, as);
-		return this.contains(key,val);
+		return this.contains(key, val);
 	}
-	
-	public boolean contains(Object context, String as)
-	{
-		return this.containsKey(context,as);
+
+	public boolean contains(Object context, String as) {
+		return this.containsKey(context, as);
 	}
 
 	public boolean containsKey(Object context, String as) {
@@ -124,50 +176,13 @@ public class aDictionary<V> extends aMultiMap<Entry<Object, String>, V> {
 		}
 	}
 
-	/*@Override
-	public String toLog() {
-		String log = this.getClass().getSimpleName() + "{" + this.keys.size() + "}\n";
-		log += this.keys.toSet().size() + "x" + this.values.size() + "\n";
-
-		String LHS = "";
-		String pLHS = "";
-		for (Entry<Entry<Object, String>, V> E : this.getEntries()) {
-			D_Key D = (aDictionary<V>.D_Key) E.getKey();
-			V V = (V) E.getValue();
-			// String A = ""+D.getKey();
-			// String B = D.getValue();
-			// String C = ""+E;
-
-			String A = "";
-			String B = "";
-			String C = "";
-
-			pLHS = LHS;
-			LHS = "" + D.getKey();
-			if (D.getKey().equals(pLHS))
-				A = "";
-			else
-				A = "" + D.getKey();
-
-			B = D.getValue();
-			C = "" + V;
-			String i = StringUtils.indent(LHS.length());
-
-			if (A.equals(""))
-				A = i;
-
-			log += A + " " + B + " " + C + "\n";
-		}
-
-		return log;
-	}*/
-
 	@Override
 	public D_Key newEntry(Object key, Object val) {
 		return new D_Key(key, "" + val);
 	}
 
-	public class D_Key extends _Map.Entry<Object, String> {
+	public static class D_Key extends _Map.Entry<Object, String> {
+
 		public D_Key(Object k, String v) {
 			super(k, v);
 		}
@@ -175,7 +190,7 @@ public class aDictionary<V> extends aMultiMap<Entry<Object, String>, V> {
 		public boolean is(String label) {
 			if (StringUtils.isFormOf(this.getValue()).test(label))
 				return true;
-			if(StringUtils.contains(""+this.getKey()).test(label))
+			if (StringUtils.contains("" + this.getKey()).test(label))
 				return true;
 			return false;
 		}
@@ -205,4 +220,5 @@ public class aDictionary<V> extends aMultiMap<Entry<Object, String>, V> {
 		}
 
 	}
+
 }

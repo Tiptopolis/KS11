@@ -11,7 +11,7 @@ public class aAtlas<V> extends aMap<Entry<Object, String>, V> {
 	public void put(D_Key key, Object val) {
 		if (!this.contains(key, val)) {
 			if (this.containsKey(key))
-				key = (aAtlas<V>.D_Key) this.keys.get(this.keys.indexOf(key));
+				key = (aAtlas.D_Key) this.keys.get(this.keys.indexOf(key));
 			this.keys.append(key);
 			this.values.append((V) val);
 		}
@@ -135,7 +135,7 @@ public class aAtlas<V> extends aMap<Entry<Object, String>, V> {
 		return new D_Key(key, "" + val);
 	}
 
-	public class D_Key extends _Map.Entry<Object, String> {
+	public static class D_Key extends _Map.Entry<Object, String> {
 		public D_Key(Object k, String v) {
 			super(k, v);
 		}
@@ -148,7 +148,7 @@ public class aAtlas<V> extends aMap<Entry<Object, String>, V> {
 			return false;
 		}
 
-		public static boolean is(_Map.Entry E, String label) {
+		public static  boolean is(_Map.Entry E, String label) {
 
 			if (E.getKey() instanceof _Map.Entry) {
 				_Map.Entry M = (_Map.Entry) E.getKey();

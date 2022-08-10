@@ -2,6 +2,8 @@ package com.uchump.prime.Metatron.Lib._HTTP;
 
 import static com.uchump.prime.Core.uAppUtils.*;
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,6 +14,7 @@ import javax.websocket.server.ServerEndpoint;
 import com.sun.net.httpserver.HttpExchange;
 import com.uchump.prime.Core.uAppUtils;
 import com.uchump.prime.Core.Primitive.A_I.iCycle;
+import com.uchump.prime.Core.Primitive.Struct.aList;
 import com.uchump.prime.Core.System.Event.iHandler;
 import com.uchump.prime.Metatron.MetatronSocketServer;
 
@@ -60,8 +63,15 @@ public class _SocketServer extends ServerSocket implements iHandler<HttpExchange
 		while (this.isActive()) {
 			synchronized (this) {
 				try (Socket socket = this.Socket.accept()) {
+					DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+					
 					Date today = new Date();
 					String httpResponse = "HTTP/1.1 200 OK\r\n\r\n" + today;
+					aList L = new aList(socket.getInputStream().read());
+						Log(L);
+					Log((char)in.read());		
+						
+						
 					socket.getOutputStream().write(httpResponse.getBytes("UTF-8"));
 					Log("> "+httpResponse);
 				} catch (IOException e) {
@@ -73,7 +83,10 @@ public class _SocketServer extends ServerSocket implements iHandler<HttpExchange
 
 	@Override
 	public boolean handle(HttpExchange o) {
+		
 		Log(o);
+		Log("<>  "+o.getRequestMethod());
+		Log("___________________________________>");
 		return false;
 	}
 
@@ -83,7 +96,7 @@ public class _SocketServer extends ServerSocket implements iHandler<HttpExchange
 	}
 
 	public boolean isActive() {
-		return !this.Socket.isClosed() && this.Socket.isBound();
+		return !this.Socket.isClosed() && this.Socket.isBound() && this.running;
 	}
 
 	@Override
